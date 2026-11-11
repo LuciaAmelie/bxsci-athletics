@@ -75,7 +75,7 @@ jobs:
 
       - name: Install headless Chromium (reads score pages)
         if: steps.mode.outputs.mode != 'prepare'
-        run: python -m playwright install --with-deps chromium
+        run: python -m playwright install chromium
 
       - name: Find the published site
         id: pages
