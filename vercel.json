@@ -1,0 +1,13 @@
+{
+  "git": {
+    "deploymentEnabled": {
+      "sync-status": false
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/sync-status.json",
+      "destination": "https://raw.githubusercontent.com/LuciaAmelie/bxsci-athletics/sync-status/status.json"
+    }
+  ]
+}
