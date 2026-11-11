@@ -406,10 +406,11 @@ def parse_link_text(text: str) -> dict:
     return {"opponent": None, "event": head or None, "location": venue}
 
 
-def calendar_entry_to_game(e: dict) -> dict | None:
-    team = parse_team_line(e.get("teamLine"))
-    if not team:
-        return None
+def calendar_entry_to_game(e: dict, teams: dict | None = None) -> dict:
+    """Never returns None: a game without a sport/team line is kept (classified from its team code if known)."""
+    team = parse_team_line(e.get("teamLine")) or dict((teams or {}).get(e["code"]) or {}) or {}
+    team = {"sport": team.get("sport") or "Other", "gender": team.get("gender") or "Coed",
+            "level": team.get("level") or "Varsity", "round": team.get("round")}
     link = parse_link_text(e["text"])
     if link["opponent"]:
         home_away = "away" if link.get("awayHint") else ("home" if is_home_venue(link["location"]) else "away")
@@ -424,14 +425,15 @@ def calendar_entry_to_game(e: dict) -> dict | None:
         "level": team["level"],
         "opponent": link["opponent"],
         "event": link["event"],
-        "round": team.get("round"),
+        "round": team.get("round") or playoff_label(e["text"]),
         "homeAway": home_away,
         "location": link["location"] or "Location TBA",
         "status": "scheduled",
         "score": None,
         "resultText": None,
         "statusNote": None,
-        "psal": {"sportCode": e["code"], "gameId": e["gid"], "url": detail_url(e["code"], e["gid"])},
+        "psal": {"sportCode": e["code"], "gameId": e["gid"], "url": detail_url(e["code"], e["gid"]),
+                 "teamCode": e["code"], "sources": ["calendar"]},
     }
 
 
@@ -547,7 +549,11 @@ def parse_sport_page(html: str) -> dict[str, dict]:
         if sw:
             status_words, rest = sw.group(0), rest[sw.end():]
         parts = re.split(r"\s+vs\.?\s+", rest, maxsplit=1, flags=re.I)
+        team = parse_team_line(em.group("team")) or {}
         info: dict[str, Any] = {
+            "code": m.group(1), "gid": m.group(2), "teamCode": m.group(1),
+            "sport": team.get("sport"), "gender": team.get("gender"), "level": team.get("level"),
+            "round": team.get("round") or playoff_label(text),
             "date": (parse_us_date(em.group("date")) or date.min).isoformat(),
             "time": parse_time(em.group("time")),
             "location": norm(em.group("venue")) or None,
@@ -850,26 +856,487 @@ def apply_detail(g: dict, d: dict) -> None:
 
 
 # ---------------------------------------------------------------------------
+# 4. Team discovery + team FULL SCHEDULE pages (cross-check source)
+# ---------------------------------------------------------------------------
+# The school calendar is the primary list of games, but on psal.org it does not show
+# every Bronx Science game (Nov 2026 showed 19 events; JV volleyball, girls cross
+# country, table tennis and playoff games were absent). Each Bronx Science team has a
+# profile page  team-profile.aspx#<team code>/10501  whose FULL SCHEDULE tab lists the
+# team's season. Team codes are discovered from the team directory on every sport page.
+TEAM_PROFILE_PATH = "/profiles/team-profile.aspx"
+TEAM_PROFILE_RE = re.compile(r"team-profile\.aspx#(\d{1,4})/(\d{4,6})", re.I)
+SPORT_NAV_RE = re.compile(r"sport\.aspx\?spCode=(\d{3})&(?:amp;)?flag=All", re.I)
+SPORT_HEADING_RE = re.compile(r"^([A-Z][A-Z &/.'\-]+?)\s+(\d{3})$")
+PLAYOFF_RE = re.compile(
+    r"\b(play-?offs?|round of \d+|(?:first|second|third|1st|2nd|3rd) round|quarter-?finals?|semi-?finals?|"
+    r"championships?|city finals?|crossover|wild ?card)\b", re.I)
+RESULT_RE = re.compile(r"(?<![A-Za-z])([WLT])(?![A-Za-z])\s*[,:(]?\s*(\d{1,3}(?:\.\d{1,2})?)\s*[-–]\s*(\d{1,3}(?:\.\d{1,2})?)")
+RESULT_AFTER_RE = re.compile(r"(\d{1,3}(?:\.\d{1,2})?)\s*[-–]\s*(\d{1,3}(?:\.\d{1,2})?)\s*\(?([WLT])\)?(?![A-Za-z])")
+DATE_MD_RE = re.compile(r"\b(\d{1,2})/(\d{1,2})(?:/(\d{2,4}))?\b")
+TEAM_REFRESH_HOURS = 3          # in-season teams: re-read the full schedule this often
+OFFSEASON_REFRESH_HOURS = 24    # other teams: once a day (finds teams missing from the calendar)
+DISCOVERY_REFRESH_HOURS = 24    # re-scan sport pages for Bronx Science teams once a day
+MAX_TEAM_PAGES = int(os.environ.get("SYNC_MAX_TEAM_PAGES", "25"))
+
+
+def team_profile_url(code: str) -> str:
+    return f"{BASE}{TEAM_PROFILE_PATH}#{code}/{SCHOOL_ID}"
+
+
+def team_info(sport: str | None, type_text: str) -> dict:
+    t = (type_text or "").lower()
+    gender = "Boys" if re.search(r"\bboys?\b", t) else "Girls" if re.search(r"\bgirls?\b", t) else "Coed"
+    level = "JV" if re.search(r"\bjv\b|\bjr\b|junior|f/s|frosh", t) else "Varsity"
+    return {"sport": sport, "gender": gender, "level": level, "type": norm(type_text)}
+
+
+def parse_sport_nav(html: str) -> list[str]:
+    """Sport page codes linked from PSAL's navigation (sport.aspx?spCode=NNN&flag=All)."""
+    codes: list[str] = []
+    for m in SPORT_NAV_RE.finditer(html):
+        if m.group(1) not in codes:
+            codes.append(m.group(1))
+    return codes
+
+
+def parse_team_directory(html: str) -> dict[str, dict]:
+    """Bronx Science rows in a sport page's team directory -> {team code: info}."""
+    soup = BeautifulSoup(html, "html.parser")
+    sport = None
+    for s in soup.find_all(string=SPORT_HEADING_RE):
+        m = SPORT_HEADING_RE.match(norm(str(s)))
+        if m:
+            sport = SPORT_NAMES.get(m.group(1).strip(), m.group(1).strip().title())
+            break
+    out: dict[str, dict] = {}
+    for a in soup.find_all("a", href=TEAM_PROFILE_RE):
+        m = TEAM_PROFILE_RE.search(a["href"])
+        if m.group(2) != SCHOOL_ID:
+            continue
+        row = a.find_parent("tr")
+        cells = [norm(td.get_text(" ", strip=True)) for td in row.find_all(["td", "th"])] if row else []
+        type_text = next((c for c in cells if re.search(r"\b(boys|girls|coed|mixed)\b", c, re.I)), "")
+        info = team_info(sport, type_text)
+        info["division"] = next((c for c in cells if "--" in c or re.search(r"division|bronx|manhattan|queens|brooklyn", c, re.I)
+                                 and c not in (type_text,)), None)
+        out[m.group(1)] = info
+    return out
+
+
+# JavaScript run inside the rendered team profile: every table row (and every game link's
+# surrounding block) that contains a date, with its cell texts and link targets.
+TEAM_ROWS_JS = r"""() => {
+  const out = [], seen = new Set();
+  const docs = [document];
+  for (const f of document.querySelectorAll('iframe')) { try { if (f.contentDocument) docs.push(f.contentDocument); } catch (e) {} }
+  const hasDate = t => /\b\d{1,2}\/\d{1,2}\b/.test(t || '');
+  const visible = el => !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+  for (const d of docs) {
+    for (const tr of d.querySelectorAll('tr')) {
+      if (!visible(tr)) continue;
+      const cells = Array.from(tr.querySelectorAll('td,th')).map(c => (c.innerText || '').trim());
+      if (!hasDate(cells.join(' '))) continue;
+      const links = Array.from(tr.querySelectorAll('a[href]')).map(a => a.getAttribute('href'));
+      links.forEach(h => seen.add(h));
+      out.push({cells, links, section: (tr.closest('[id]') || {}).id || ''});
+    }
+    for (const a of d.querySelectorAll('a[href*="game-detail"]')) {
+      const h = a.getAttribute('href');
+      if (seen.has(h) || !visible(a)) continue;
+      let el = a;
+      for (let i = 0; i < 5 && el.parentElement; i++) { el = el.parentElement; if (hasDate(el.innerText)) break; }
+      out.push({cells: [(el.innerText || '').replace(/\s+/g, ' ').trim()], links: [h], section: (el.closest('[id]') || {}).id || ''});
+      seen.add(h);
+    }
+  }
+  return out;
+}"""
+
+
+def fetch_team_schedules(fetcher: Fetcher, codes: list[str], debug_dir: Path | None) -> tuple[dict, list[str]]:
+    """Render team profile FULL SCHEDULE tabs. Returns ({code: rows or None if unreadable}, warnings)."""
+    results: dict[str, list | None] = {}
+    warnings: list[str] = []
+    if not codes:
+        return results, warnings
+    if not fetcher.allowed(f"{BASE}{TEAM_PROFILE_PATH}"):
+        warnings.append("robots.txt disallows team profile pages — cross-check against team schedules skipped.")
+        return {c: None for c in codes}, warnings
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        warnings.append("Playwright is not installed — team schedules were skipped.")
+        return {c: None for c in codes}, warnings
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        ctx = browser.new_context(user_agent=USER_AGENT, timezone_id="America/New_York", locale="en-US")
+        ctx.route("**/*", lambda route: route.abort()
+                  if route.request.resource_type in ("image", "media", "font") else route.continue_())
+        page = ctx.new_page()
+        for code in codes:
+            url = team_profile_url(code)
+            fetcher.wait()
+            try:
+                page.goto("about:blank")
+                resp = page.goto(url, wait_until="networkidle", timeout=45000)
+                fetcher.requests_made += 1
+                if resp is not None and resp.status in (401, 403, 429):
+                    warnings.append(f"PSAL returned HTTP {resp.status} for team pages; stopped reading team schedules.")
+                    results.update({c: None for c in codes if c not in results})
+                    break
+                try:   # make sure the FULL SCHEDULE tab is the one showing
+                    tab = page.get_by_text("FULL SCHEDULE", exact=True).first
+                    if tab.count():
+                        tab.click(timeout=3000)
+                        page.wait_for_load_state("networkidle", timeout=15000)
+                except Exception:
+                    pass
+                page.wait_for_timeout(800)
+                rows = page.evaluate(TEAM_ROWS_JS)
+                text = page.inner_text("body")
+            except Exception as e:
+                warnings.append(f"Could not read team schedule {code}: {e}")
+                results[code] = None
+                continue
+            if debug_dir:
+                debug_dir.mkdir(parents=True, exist_ok=True)
+                (debug_dir / f"team_{code}.json").write_text(json.dumps(rows, indent=1), encoding="utf-8")
+                (debug_dir / f"team_{code}.txt").write_text(text, encoding="utf-8")
+            results[code] = rows
+        browser.close()
+    return results, warnings
+
+
+def resolve_md_date(mo: int, d: int, y: int | None, today: date) -> date | None:
+    """'11/09' has no year: pick the year that puts the date closest to today."""
+    try:
+        if y is not None:
+            return date(y + 2000 if y < 100 else y, mo, d)
+        options = [date(today.year + k, mo, d) for k in (-1, 0, 1)]
+    except ValueError:
+        return None
+    return min(options, key=lambda x: abs((x - today).days))
+
+
+def result_from_text(text: str) -> dict | None:
+    """'W 3-1', 'L 1-3', 'L 3-1', '3-1 W', 'T 0-0' -> Bronx Science-first score. Needs the W/L/T letter."""
+    m = RESULT_RE.search(text)
+    if m:
+        letter, x, y = m.group(1).upper(), _num(m.group(2)), _num(m.group(3))
+    else:
+        m = RESULT_AFTER_RE.search(text)
+        if not m:
+            return None
+        x, y, letter = _num(m.group(1)), _num(m.group(2)), m.group(3).upper()
+    hi, lo = max(x, y), min(x, y)
+    if letter == "W" and hi != lo:
+        return {"bxsci": hi, "opponent": lo}
+    if letter == "L" and hi != lo:
+        return {"bxsci": lo, "opponent": hi}
+    if letter == "T" and x == y:
+        return {"bxsci": x, "opponent": y}
+    return None   # contradictory (e.g. "W 2-2"): don't guess
+
+
+def playoff_label(text: str) -> str | None:
+    """'PSAL Playoffs - Round of 32' -> 'Playoffs · Round of 32'; 'City Championships' -> 'Championship'."""
+    words = [m.group(1) for m in PLAYOFF_RE.finditer(text or "")]
+    if not words:
+        return None
+    stage = next((w for w in words if not re.match(r"(play-?offs?|championships?)$", w, re.I)), None)
+    if stage:
+        stage = stage[0].upper() + stage[1:].lower()
+        return f"Playoffs · {stage}"
+    if any(re.match(r"play-?offs?$", w, re.I) for w in words):
+        return "Playoffs"
+    return "Championship"
+
+
+def parse_team_rows(rows: list[dict], code: str, info: dict, today: date) -> tuple[list[dict], int]:
+    """Turn rendered FULL SCHEDULE rows into game entries. Returns (entries, rows skipped)."""
+    entries: list[dict] = []
+    skipped = 0
+    for r in rows or []:
+        cells = [norm(c) for c in r.get("cells", []) if norm(c)]
+        text = " | ".join(cells)
+        low = text.lower()
+        if not cells or "practice" in low or "today's events" in low:
+            skipped += 1
+            continue
+        dm = DATE_MD_RE.search(text)
+        d = resolve_md_date(int(dm.group(1)), int(dm.group(2)), int(dm.group(3)) if dm.group(3) else None, today) if dm else None
+        if d is None:
+            skipped += 1
+            continue
+        link = next((GAME_HREF_RE.search(h) for h in r.get("links", []) if GAME_HREF_RE.search(h or "")), None)
+        opp = ha = venue = None
+        other_teams_row = False
+        for c in cells:   # "A vs B" in one cell
+            parts = re.split(r"\s+vs\.?\s+", c, maxsplit=1, flags=re.I)
+            if len(parts) == 2:
+                a, b = norm(parts[0]), norm(parts[1])
+                if BXS_RE.search(a):
+                    opp, ha = b, "home"
+                elif BXS_RE.search(b):
+                    opp, ha = a, "away"
+                else:
+                    other_teams_row = True   # another school's game (e.g. a sidebar)
+                break
+        if other_teams_row:
+            skipped += 1
+            continue
+        if opp is None:
+            for c in cells:
+                m = re.match(r"^(vs\.?|versus|@|at)\s+(.+)$", c, re.I)
+                if m:
+                    opp, ha = m.group(2), ("home" if m.group(1).lower().startswith("v") else "away")
+                    break
+        if ha is None:
+            ha = next(({"h": "home", "home": "home", "a": "away", "away": "away", "n": "neutral", "neutral": "neutral"}[c.lower()]
+                       for c in cells if c.lower() in ("h", "a", "home", "away", "n", "neutral")), None)
+        if opp is None:
+            for c in cells:
+                if (len(re.findall(r"[A-Za-z]", c)) >= 3 and not BXS_RE.search(c) and not DATE_MD_RE.search(c)
+                        and not TIME_RE.search(c) and not RESULT_RE.search(c) and not VENUE_WORDS_RE.search(c)
+                        and not PLAYOFF_RE.search(c) and not STATUS_WORDS_RE.match(c)
+                        and c.lower() not in ("home", "away", "neutral", "final", "w", "l", "t", "tba", "tbd")):
+                    opp = c
+                    break
+        if opp and " @ " in f" {opp} ":
+            opp, venue = [norm(x) for x in opp.split("@", 1)]
+        event = None
+        if opp is None:   # meets / championships: "Bronx Borough Championships @ Van Cortlandt Park"
+            for c in cells:
+                if "@" in c and not c.lstrip().startswith("@"):
+                    head, tail = [norm(x) for x in c.split("@", 1)]
+                    if len(re.findall(r"[A-Za-z]", head)) >= 3 and not DATE_MD_RE.search(head):
+                        event, venue = head, venue or tail or None
+                        break
+        if venue is None:
+            venue = next((c for c in cells if VENUE_WORDS_RE.search(c) and not BXS_RE.fullmatch(c)), None)
+        result = result_from_text(text)
+        status_words = " ".join(w for w in ("postponed", "cancel", "forfeit", "rescheduled", "suspended") if w in low)
+        if not link and not opp and not result and not event:
+            skipped += 1          # not a game row
+            continue
+        entries.append({
+            "code": link.group(1) if link else code, "gid": link.group(2) if link else None, "teamCode": code,
+            "date": d.isoformat(), "time": parse_time(text), "opponent": clean_team(opp), "homeAway": ha,
+            "location": venue, "event": event, "result": result, "statusWords": status_words or None,
+            "round": playoff_label(text), "sport": info.get("sport"), "gender": info.get("gender"),
+            "level": info.get("level"), "raw": text[:200],
+        })
+    return entries, skipped
+
+
+# ---------------------------------------------------------------------------
+# Combining sources, duplicates and completeness
+# ---------------------------------------------------------------------------
+def _slug(s: str | None) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", (s or "event").lower()).strip("-")[:30] or "event"
+
+
+def same_game(g: dict, e: dict) -> bool:
+    """Same date, same team (sport/gender/level) and same opponent -> the same game."""
+    if g["date"] != e["date"]:
+        return False
+    for k in ("sport", "gender", "level"):
+        if e.get(k) and g.get(k) and e[k] != g[k]:
+            return False
+    if g.get("opponent") and e.get("opponent"):
+        return _name_matches(g["opponent"], e["opponent"]) or _name_matches(e["opponent"], g["opponent"])
+    return not g.get("opponent") and not e.get("opponent")
+
+
+def new_game_from_entry(e: dict, source: str) -> dict:
+    key_gid = e.get("gid")
+    gid = f"psal-{e['code']}-{key_gid}" if key_gid else f"psal-{e['teamCode']}-s{e['date'].replace('-', '')}-{_slug(e.get('opponent'))}"
+    g = {
+        "id": gid, "date": e["date"], "time": e.get("time"), "sport": e.get("sport") or "Other",
+        "gender": e.get("gender") or "Coed", "level": e.get("level") or "Varsity",
+        "opponent": e.get("opponent"), "event": None if e.get("opponent") else (e.get("event") or None),
+        "round": e.get("round"), "homeAway": e.get("homeAway") or ("home" if is_home_venue(e.get("location")) else "neutral" if not e.get("opponent") else "away"),
+        "location": e.get("location") or "Location TBA", "status": "scheduled", "score": None,
+        "resultText": None, "statusNote": None,
+        "psal": {"sportCode": e["code"], "gameId": key_gid, "url": detail_url(e["code"], key_gid) if key_gid else team_profile_url(e["teamCode"]),
+                 "teamCode": e.get("teamCode"), "sources": [source]},
+    }
+    enrich(g, e, source)
+    return g
+
+
+def enrich(g: dict, e: dict, source: str) -> None:
+    """Fill gaps in a game from another source. The calendar's own facts are never overwritten."""
+    ps_ = g.setdefault("psal", {})
+    if source not in ps_.setdefault("sources", []):
+        ps_["sources"].append(source)
+    if e.get("teamCode") and not ps_.get("teamCode"):
+        ps_["teamCode"] = e["teamCode"]
+    if e.get("time") and not g.get("time"):
+        g["time"] = e["time"]
+    if e.get("homeAway") and source in ("team", "sportpage"):
+        g["homeAway"] = e["homeAway"]
+        ps_["_sportPage"] = True          # authoritative home/away (see merge)
+    if e.get("opponent") and not g.get("opponent"):
+        g["opponent"], g["event"] = e["opponent"], None
+    if e.get("location") and g.get("location") in (None, "", "Location TBA"):
+        g["location"] = e["location"]
+    if e.get("round") and not g.get("round"):
+        g["round"] = e["round"]
+    for k in ("sport", "gender", "level"):
+        if e.get(k) and g.get(k) in (None, "", "Other"):
+            g[k] = e[k]
+    if e.get("statusWords"):
+        st, note = status_from_words(e["statusWords"])
+        if st:
+            g["status"] = st
+            if "forfeit" in e["statusWords"].lower():
+                g["resultText"] = g.get("resultText") or "Forfeit"
+            if note:
+                g["statusNote"] = note
+    if e.get("result") is not None and g.get("score") is None and g["status"] not in ("canceled", "postponed"):
+        g["score"], g["status"] = e["result"], "final"
+        ps_["scoreSource"] = source
+
+
+def combine(fresh: dict[str, dict], entries: list[dict], source: str, report: dict) -> int:
+    """Add entries from a cross-check source. Returns how many games were new (not on the calendar)."""
+    added = 0
+    for e in entries:
+        key = game_key(e["code"], e["gid"]) if e.get("gid") else None
+        if key and key in fresh:
+            enrich(fresh[key], e, source)
+            continue
+        match = None
+        for k, g in fresh.items():
+            if same_game(g, e):
+                # Two different PSAL game ids with different start times on the same day = a doubleheader.
+                if key and g["psal"].get("gameId") and g.get("time") and e.get("time") and g["time"] != e["time"]:
+                    continue
+                match = (k, g)
+                break
+        if match:
+            enrich(match[1], e, source)
+            if key:
+                aliases = match[1]["psal"].setdefault("aliases", [])
+                if key not in aliases:
+                    aliases.append(key)
+                report["duplicates"].append({"kept": match[1]["id"], "duplicate": key, "source": source,
+                                             "date": e["date"], "opponent": e.get("opponent")})
+            continue
+        g = new_game_from_entry(e, source)
+        fresh[key or g["id"]] = g
+        added += 1
+        report["notOnCalendar"].append({"id": g["id"], "date": g["date"], "team": f"{g['gender']} {g['level']} {g['sport']}",
+                                        "opponent": g.get("opponent") or g.get("event"), "source": source,
+                                        "round": g.get("round")})
+    return added
+
+
+def new_report() -> dict:
+    return {"missingFromCollected": [], "notOnCalendar": [], "duplicates": [], "unclassified": [],
+            "teams": {}, "teamSchedulesUnreadable": [], "scoreConflicts": [], "playedWithoutScore": [],
+            "unverifiedMissing": [], "perDate": {}}
+
+
+def completeness(report: dict, cal_entries: dict[str, dict], fresh: dict[str, dict], games: list[dict],
+                 details: dict, prev_by_id: dict, now: datetime) -> dict:
+    """Compare the school calendar with what was collected, date by date, and explain every played game without a score."""
+    today, hm = now.date().isoformat(), now.strftime("%H:%M")
+    collected_ids = {g["id"] for g in games}
+    alias_to_id = {}
+    for g in fresh.values():
+        for a in (g.get("psal") or {}).get("aliases", []):
+            alias_to_id[a] = g["id"]
+    per_date: dict[str, dict] = {}
+    for key, e in cal_entries.items():
+        gid = f"psal-{e['code']}-{e['gid']}"
+        day = per_date.setdefault(e["date"], {"calendar": 0, "collected": 0, "missing": [], "extra": []})
+        day["calendar"] += 1
+        if gid in collected_ids or alias_to_id.get(key) in collected_ids:
+            day["collected"] += 1
+        else:
+            day["missing"].append(f"{e.get('teamLine') or '?'} {e['text']} (#{key})")
+            report["missingFromCollected"].append({"date": e["date"], "calendar": e["text"], "teamLine": e.get("teamLine"), "key": key})
+    for item in report["notOnCalendar"]:
+        per_date.setdefault(item["date"], {"calendar": 0, "collected": 0, "missing": [], "extra": []})["extra"].append(
+            f"{item['team']} vs {item['opponent']} (from {item['source']})")
+    report["perDate"] = {d: v for d, v in sorted(per_date.items()) if v["missing"] or v["extra"]}
+
+    for g in games:
+        if g.get("score") is not None or g.get("resultText") or g["status"] in ("canceled", "postponed") or not g.get("opponent"):
+            continue
+        if g["date"] > today or (g["date"] == today and (g.get("time") or "23:59") > hm):
+            continue
+        key = f"{(g.get('psal') or {}).get('sportCode')}/{(g.get('psal') or {}).get('gameId')}"
+        info = g.get("psal") or {}
+        if key in details:
+            why = details[key].get("scoreReason") or "page checked, no score"
+        elif not info.get("gameId"):
+            why = "no PSAL game page link for this game (found on a team schedule without one)"
+        elif info.get("checks"):
+            why = f"PSAL game page checked {info['checks']}x, no score posted yet (last {info.get('checkedAt')})"
+        else:
+            why = "not checked yet — queued for the next run (per-run page limit)"
+        report["playedWithoutScore"].append({"id": g["id"], "date": g["date"], "team": f"{g['gender']} {g['level']} {g['sport']}",
+                                             "opponent": g.get("opponent"), "reason": why})
+    return report
+
+
+def report_markdown(report: dict, now: datetime) -> str:
+    L = [f"# PSAL completeness report — {now:%b %d, %Y %I:%M %p} ET", ""]
+    t = report["teams"]
+    L.append(f"- Bronx Science teams known: **{len(t)}** · team schedules read this run: "
+             f"{sum(1 for v in t.values() if v.get('readNow'))} · unreadable: {len(report['teamSchedulesUnreadable'])}")
+    L.append(f"- Calendar games not collected: **{len(report['missingFromCollected'])}** (should be 0)")
+    L.append(f"- Games found only on team schedules / sport pages (not on the school calendar): **{len(report['notOnCalendar'])}**")
+    L.append(f"- Duplicates merged: {len(report['duplicates'])} · score conflicts: {len(report['scoreConflicts'])}")
+    L.append(f"- Played games still without a published score: **{len(report['playedWithoutScore'])}**")
+    if report["unverifiedMissing"]:
+        L.append(f"- Games no longer listed but NOT removed (couldn't verify this run): {len(report['unverifiedMissing'])}")
+    if report["missingFromCollected"]:
+        L += ["", "## ⚠️ Calendar games not collected", *[f"- {m['date']} · {m['teamLine']} · {m['calendar']} (#{m['key']})" for m in report["missingFromCollected"]]]
+    if report["perDate"]:
+        L += ["", "## Per-date differences (school calendar vs collected)", "| Date | On calendar | Collected from calendar | Missing | Only on other PSAL pages |", "|---|---|---|---|---|"]
+        for d, v in report["perDate"].items():
+            L.append(f"| {d} | {v['calendar']} | {v['collected']} | {'; '.join(v['missing']) or '—'} | {'; '.join(v['extra']) or '—'} |")
+    if report["teamSchedulesUnreadable"]:
+        L += ["", "## Team schedules that could not be read", *[f"- {c}: {team_profile_url(c)}" for c in report["teamSchedulesUnreadable"]]]
+    if report["unclassified"]:
+        L += ["", "## Games kept without a sport/team line", *[f"- {u}" for u in report["unclassified"]]]
+    if report["scoreConflicts"]:
+        L += ["", "## Score conflicts (game page used)", *[f"- {c['id']}: game page {c['detail']} vs team schedule {c['team']}" for c in report["scoreConflicts"]]]
+    if report["playedWithoutScore"]:
+        L += ["", "## Played games without a score", "| Date | Team | Opponent | Why |", "|---|---|---|---|"]
+        for p in sorted(report["playedWithoutScore"], key=lambda x: x["date"], reverse=True):
+            L.append(f"| {p['date']} | {p['team']} | {p['opponent']} | {p['reason']} |")
+    if report["teams"]:
+        L += ["", "## Bronx Science teams", "| Code | Team | Schedule rows read | Games parsed | Last read |", "|---|---|---|---|---|"]
+        for c, v in sorted(report["teams"].items()):
+            L.append(f"| {c} | {v.get('gender', '')} {v.get('level', '')} {v.get('sport') or '?'} | {v.get('rows', '—')} | "
+                     f"{v.get('games', '—')} | {v.get('readAt', 'never')} |")
+    return "\n".join(L)
+
+
+# ---------------------------------------------------------------------------
 # Building, merging and validating
 # ---------------------------------------------------------------------------
-def build_fresh(pages: dict) -> tuple[dict[str, dict], list[str]]:
+def build_fresh(pages: dict, teams: dict | None = None) -> tuple[dict[str, dict], dict[str, dict], list[str], list[str]]:
+    """Calendar entries -> games. Returns (fresh, calendar entries by key, unclassified, warnings). Nothing is dropped."""
     fresh: dict[str, dict] = {}
-    warnings: list[str] = []
-    missing_team = 0
-    total = 0
+    cal_entries: dict[str, dict] = {}
+    unclassified: list[str] = []
     for _ym, (_html, entries) in sorted(pages.items()):
         for e in entries:
-            total += 1
-            g = calendar_entry_to_game(e)
-            if g is None:
-                missing_team += 1
-                continue
-            fresh[game_key(e["code"], e["gid"])] = g
-    if total and missing_team / total > 0.5:
-        raise SyncError(f"{missing_team} of {total} calendar games had no sport/team line — layout may have changed.")
-    if missing_team:
-        warnings.append(f"Skipped {missing_team} calendar entries without a sport/team line.")
-    return fresh, warnings
+            key = game_key(e["code"], e["gid"])
+            cal_entries[key] = e
+            if key in fresh:
+                continue                     # same game shown on two month pages (leading/trailing days)
+            if not parse_team_line(e.get("teamLine")):
+                unclassified.append(f"{e['date']} {e['text']} (#{key})")
+            fresh[key] = calendar_entry_to_game(e, teams)
+    warnings = [f"{len(unclassified)} calendar games had no sport/team line; kept and classified from their team code."] if unclassified else []
+    return fresh, cal_entries, unclassified, warnings
 
 
 def apply_sport_info(fresh: dict[str, dict], info: dict[str, dict]) -> int:
@@ -906,13 +1373,23 @@ def _comparable(games: list[dict]) -> str:
         g2 = copy.deepcopy(g)
         g2.pop("missingRuns", None)
         if isinstance(g2.get("psal"), dict):
-            g2["psal"].pop("checkedAt", None)
-            g2["psal"].pop("checks", None)
+            for k in ("checkedAt", "checks", "sources", "aliases", "_sportPage"):
+                g2["psal"].pop(k, None)
         clean.append(g2)
     return json.dumps(sorted(clean, key=lambda x: x.get("id", "")), sort_keys=True)
 
 
-def merge(previous: dict, fresh: dict[str, dict], window: tuple[date, date], today: date) -> tuple[list[dict], dict]:
+def merge(previous: dict, fresh: dict[str, dict], window: tuple[date, date], today: date,
+          verified_codes: set | None = None, known_codes: set | None = None,
+          report: dict | None = None) -> tuple[list[dict], dict]:
+    """
+    verified_codes: team codes whose FULL SCHEDULE was read successfully this run.
+    known_codes:    all Bronx Science team codes we know about.
+    A game that PSAL no longer lists is only counted as "missing" when every source that
+    should show it was read successfully this run (calendar month + that team's schedule).
+    """
+    verified_codes = verified_codes or set()
+    known_codes = known_codes or set()
     prev_meta = previous.get("meta", {})
     prev_games = previous.get("games", [])
     was_sample = prev_meta.get("source") == "sample"
@@ -922,13 +1399,20 @@ def merge(previous: dict, fresh: dict[str, dict], window: tuple[date, date], tod
             continue                                  # drop sample data on first real sync
         by_id[g["id"]] = copy.deepcopy(g)
 
-    summary = {"added": 0, "updated": 0, "rescheduled": 0, "markedCanceled": 0, "kept": 0}
-    fresh_ids = set()
+    summary = {"added": 0, "updated": 0, "rescheduled": 0, "markedCanceled": 0, "kept": 0, "reidentified": 0}
+    fresh_ids = {g["id"] for g in fresh.values()}
     for key, g in fresh.items():
         gid = g["id"]
-        fresh_ids.add(gid)
         from_sport_page = bool(g.get("psal", {}).pop("_sportPage", False))
         old = by_id.get(gid)
+        if old is None:
+            # Same game under a different id (e.g. first seen on a team schedule, now on the calendar)?
+            twin = next((o for oid, o in by_id.items() if oid not in fresh_ids and oid.startswith("psal-")
+                         and same_game(o, g)), None)
+            if twin is not None:
+                del by_id[twin["id"]]
+                old = twin
+                summary["reidentified"] += 1
         if old is None:
             by_id[gid] = g
             summary["added"] += 1
@@ -953,7 +1437,7 @@ def merge(previous: dict, fresh: dict[str, dict], window: tuple[date, date], tod
         elif (old.get("statusNote") or "").startswith("Rescheduled from") and not new.get("statusNote"):
             new["statusNote"] = old["statusNote"]
         if isinstance(old.get("psal"), dict):
-            for k in ("checkedAt", "checks"):
+            for k in ("checkedAt", "checks", "teamCode"):
                 if old["psal"].get(k) and not new.get("psal", {}).get(k):
                     new.setdefault("psal", {})[k] = old["psal"][k]
         # A 0-0 tie is a real score: test with "is not None", never truthiness.
@@ -974,13 +1458,18 @@ def merge(previous: dict, fresh: dict[str, dict], window: tuple[date, date], tod
             continue
         if not (window[0] <= d <= window[1]):
             continue                                  # outside what we checked: keep untouched
-        if d < today:
-            summary["kept"] += 1                      # history: keep past games and results
+        if g.get("score") is not None or g.get("resultText"):
+            summary["kept"] += 1                      # published results are history: keep
+            continue
+        tcode = (g.get("psal") or {}).get("teamCode") or (g.get("psal") or {}).get("sportCode")
+        if tcode in known_codes and tcode not in verified_codes:
+            if report is not None:                    # couldn't confirm this run: leave it alone
+                report["unverifiedMissing"].append({"id": gid, "date": g["date"], "opponent": g.get("opponent")})
             continue
         g["missingRuns"] = int(g.get("missingRuns", 0)) + 1
         if g["missingRuns"] >= MISSING_RUNS_BEFORE_CANCEL and g.get("status") != "canceled":
             g["status"] = "canceled"
-            g["statusNote"] = "Removed from PSAL schedule"
+            g["statusNote"] = "Removed from PSAL schedule" if d >= today else "No longer listed by PSAL"
             summary["markedCanceled"] += 1
 
     games = sorted(by_id.values(), key=lambda x: (x.get("date", ""), x.get("time") or "99:99", x.get("sport", "")))
@@ -1020,6 +1509,8 @@ def pick_detail_targets(fresh: dict[str, dict], previous: dict, now: datetime,
             continue
         if not g.get("opponent"):
             continue                          # meets/championships have no head-to-head score
+        if not str((g.get("psal") or {}).get("gameId") or "").isdigit():
+            continue                          # no game page to check (team-schedule entry without a link)
         old = prev.get(g["id"]) or {}
         if old.get("score") is not None or old.get("resultText"):
             continue                          # already have the final result
@@ -1039,7 +1530,7 @@ def pick_detail_targets(fresh: dict[str, dict], previous: dict, now: datetime,
                     continue
             except ValueError:
                 pass
-        item = ((g["date"], g.get("time") or ""), (*key.split("/"), g.get("opponent"), g.get("sport")))
+        item = ((g["date"], g.get("time") or ""), (g["psal"]["sportCode"], g["psal"]["gameId"], g.get("opponent"), g.get("sport")))
         (recent if age <= 2 else never if not last else again).append(item)
     ordered = []
     for bucket in (recent, never, again):
@@ -1142,6 +1633,91 @@ def build_output(previous: dict, games: list[dict], now: datetime, sync_info: di
 # ---------------------------------------------------------------------------
 # Commands
 # ---------------------------------------------------------------------------
+REPORT_DIR = SCRIPT_DIR / "report"
+
+
+def _hours_since(iso: str | None, now: datetime) -> float:
+    if not iso:
+        return 1e9
+    try:
+        return (now - datetime.fromisoformat(iso)).total_seconds() / 3600
+    except ValueError:
+        return 1e9
+
+
+def discover_teams(fetcher: Fetcher, previous: dict, cal_teams: dict, now: datetime,
+                   report: dict, warnings: list[str]) -> tuple[dict, list[dict], set]:
+    """Find every Bronx Science team code (daily) from the team directory on each sport page."""
+    prev_sync = previous.get("meta", {}).get("sync") or {}
+    teams = copy.deepcopy(prev_sync.get("teams") or {})
+    for t in teams.values():
+        t.pop("readNow", None)
+    due = not teams or _hours_since(prev_sync.get("lastDiscovery"), now) >= DISCOVERY_REFRESH_HOURS
+    events: list[dict] = []
+    fetched: set[str] = set()
+    if due:
+        codes: list[str] = []
+        home = f"{BASE}/"
+        if fetcher.allowed(home):
+            try:
+                codes = parse_sport_nav(fetcher.get_html(home, "home"))
+            except AccessDenied:
+                raise
+            except SyncError as e:
+                warnings.append(f"PSAL home page: {e}")
+        if not codes:
+            warnings.append("Couldn't list PSAL sport pages; team codes come from the school calendar only this run.")
+        for code in codes:
+            url = f"{BASE}{SPORT_PATH}?spCode={code}&flag=All"
+            if not fetcher.allowed(url):
+                report.setdefault("robotsSkipped", []).append(url)
+                continue
+            try:
+                html = fetcher.get_html(url, f"sport_{code}")
+            except AccessDenied:
+                raise
+            except SyncError as e:
+                warnings.append(f"Sport page {code}: {e}")
+                continue
+            fetched.add(code)
+            for tcode, info in parse_team_directory(html).items():
+                t = teams.setdefault(tcode, {})
+                t.update({k: v for k, v in info.items() if v})
+            events += list(parse_sport_page(html).values())
+    for code, info in cal_teams.items():
+        t = teams.setdefault(code, {})
+        for k in ("sport", "gender", "level"):
+            if info.get(k) and not t.get(k):
+                t[k] = info[k]
+    if due and fetched:
+        report["discoveryRan"] = True
+    return teams, events, fetched
+
+
+def pick_team_codes(teams: dict, fresh: dict, previous: dict, now: datetime) -> list[str]:
+    today = now.date()
+    near = set()
+    recent = set()
+    for g in list(fresh.values()) + previous.get("games", []):
+        tc = (g.get("psal") or {}).get("teamCode") or (g.get("psal") or {}).get("sportCode")
+        try:
+            dd = (date.fromisoformat(g["date"]) - today).days
+        except (KeyError, ValueError):
+            continue
+        if -45 <= dd <= 45:
+            near.add(tc)
+        if -1 <= dd <= 0:
+            recent.add(tc)
+    due = []
+    for code, t in teams.items():
+        in_season = code in near or t.get("gamesInWindow", 0) > 0
+        gap = TEAM_REFRESH_HOURS if in_season else OFFSEASON_REFRESH_HOURS
+        if code in recent or _hours_since(t.get("readAt"), now) >= gap:
+            due.append((0 if code in recent else 1 if in_season else 2, t.get("readAt") or "", code))
+    due.sort()
+    return [c for _, _, c in due[:MAX_TEAM_PAGES]]
+
+
 def run_sync(args, fetcher: Fetcher | None = None, now: datetime | None = None) -> int:
     now = now or datetime.now(TZ)
     today = now.date()
@@ -1152,74 +1728,139 @@ def run_sync(args, fetcher: Fetcher | None = None, now: datetime | None = None) 
         write_json(data_path, previous)               # the best known data is always in place
     fetcher = fetcher or Fetcher()
     warnings: list[str] = []
+    report = new_report()
     try:
         fetcher.check_robots()
         fetcher.require_allowed(CALENDAR_URL)
+
+        # 1. School calendar (primary list)
         pages, w = fetch_calendar(fetcher, today)
         warnings += w
-        first = min(pages)
-        last = max(pages)
-        window = (month_bounds(*first)[0], month_bounds(*last)[1])
-        fresh, w = build_fresh(pages)
+        window = (month_bounds(*min(pages))[0], month_bounds(*max(pages))[1])
+        cal_teams = {}
+        for _ym, (_h, entries) in pages.items():
+            for e in entries:
+                t = parse_team_line(e.get("teamLine"))
+                if t:
+                    cal_teams.setdefault(e["code"], t)
+
+        # 2. Every Bronx Science team (daily discovery from sport-page team directories)
+        teams, discovery_events, fetched_sport = discover_teams(fetcher, previous, cal_teams, now, report, warnings)
+        discovered = bool(fetched_sport)
+        fresh, cal_entries, unclassified, w = build_fresh(pages, teams)
         warnings += w
+        report["unclassified"] = unclassified
         validate(fresh, previous, window, today)
 
+        # 3. Cross-check: each team's FULL SCHEDULE
+        team_codes = pick_team_codes(teams, fresh, previous, now)
+        schedules, w = fetch_team_schedules(fetcher, team_codes, DEBUG_DIR)
+        warnings += w
+        verified: set[str] = set()
+        team_added = 0
+        stamp = now.isoformat(timespec="seconds")
+        for code in team_codes:
+            rows = schedules.get(code)
+            t = teams.setdefault(code, {})
+            if rows is None:
+                report["teamSchedulesUnreadable"].append(code)
+                continue
+            entries, _skipped = parse_team_rows(rows, code, t, today)
+            entries = [e for e in entries if window[0].isoformat() <= e["date"] <= window[1].isoformat()]
+            known_here = [g for g in fresh.values() if (g.get("psal") or {}).get("teamCode") == code]
+            t.update({"readAt": stamp, "rows": len(rows), "games": len(entries), "gamesInWindow": len(entries), "readNow": True})
+            if known_here and not entries:
+                # The calendar shows games for this team but its schedule gave none: a reading problem, not proof of removal.
+                report["teamSchedulesUnreadable"].append(code)
+                continue
+            verified.add(code)
+            team_added += combine(fresh, entries, "team", report)
+
+        # 4. Sport pages (today's games league-wide): times, home/away, status words
+        sport_events = list(discovery_events)
         codes, full = pick_sport_codes(fresh, previous, now)
-        matched = 0
         for code in codes:
             url = f"{BASE}{SPORT_PATH}?spCode={code}&flag=All"
-            if not fetcher.allowed(url):
-                warnings.append(f"robots.txt disallows sport page {code}; times/home-away for it use calendar info only.")
-                continue
-            matched += apply_sport_info(fresh, parse_sport_page(fetcher.get_html(url, f"sport_{code}")))
+            if code in fetched_sport or not fetcher.allowed(url):
+                continue                      # already read during team discovery this run
+            try:
+                sport_events += list(parse_sport_page(fetcher.get_html(url, f"sport_{code}")).values())
+            except AccessDenied:
+                raise
+            except SyncError as e:
+                warnings.append(f"Sport page {code}: {e}")
+        sport_events = [e for e in sport_events if window[0].isoformat() <= e["date"] <= window[1].isoformat()]
+        sport_added = combine(fresh, sport_events, "sportpage", report)
 
+        # 5. Game pages: final scores
         targets = [] if args.no_details else pick_detail_targets(fresh, previous, now)
         details, w, _ = fetch_details(fetcher, targets, DEBUG_DIR)
         warnings += w
         scores_found = 0
-        checked_at = now.isoformat(timespec="seconds")
         prev_by_id = {g.get("id"): g for g in previous.get("games", [])}
         detail_report = []
+        by_key = {f"{g['psal'].get('sportCode')}/{g['psal'].get('gameId')}": g for g in fresh.values()}
         for key, d in details.items():
-            g = fresh.get(key)
+            g = by_key.get(key)
             if not g:
                 continue
+            if d.get("score") is not None and g.get("score") is not None and d["score"] != g["score"]:
+                report["scoreConflicts"].append({"id": g["id"], "detail": d["score"], "team": g["score"]})
             apply_detail(g, d)
-            prev_checks = int(((prev_by_id.get(g["id"]) or {}).get("psal") or {}).get("checks", 0) or 0)
-            g["psal"]["checkedAt"] = checked_at
-            g["psal"]["checks"] = prev_checks + 1
             if d.get("score") is not None:
+                g["psal"]["scoreSource"] = "detail"
                 scores_found += 1
+            prev_checks = int(((prev_by_id.get(g["id"]) or {}).get("psal") or {}).get("checks", 0) or 0)
+            g["psal"]["checkedAt"] = stamp
+            g["psal"]["checks"] = prev_checks + 1
             detail_report.append((g, d))
-        waiting = sum(1 for g in fresh.values() if g.get("opponent") and g["status"] not in ("canceled", "postponed")
-                      and g.get("score") is None and not g.get("resultText")
-                      and (g["date"] < today.isoformat() or (g["date"] == today.isoformat()
-                           and (g.get("time") or "23:59") <= now.strftime("%H:%M"))))
 
-        games, summary = merge(previous, fresh, window, today)
+        # 6. Merge with history (removals only when verified)
+        known = set(teams) | {(g.get("psal") or {}).get("teamCode") for g in fresh.values()}
+        games, summary = merge(previous, fresh, window, today, verified_codes=verified, known_codes=known, report=report)
+
+        # 7. Completeness check
+        for code, t in teams.items():
+            report["teams"][code] = {k: t.get(k) for k in ("sport", "gender", "level", "rows", "games", "readAt", "readNow")}
+        completeness(report, cal_entries, fresh, games, details, prev_by_id, now)
+        write_reports(report, now)
+        log_completeness(report, cal_entries)
+
         prev_sync = previous.get("meta", {}).get("sync") or {}
+        for t in teams.values():
+            t.pop("readNow", None)
         sync_info = {
             "status": "ok",
             "window": [window[0].isoformat(), window[1].isoformat()],
-            "gamesInWindow": len(fresh),
-            "sportPages": len(codes),
-            "sportPageMatches": matched,
+            "gamesInWindow": sum(1 for g in games if window[0].isoformat() <= g["date"] <= window[1].isoformat()),
+            "calendarGames": len(cal_entries),
+            "addedFromTeamSchedules": team_added,
+            "addedFromSportPages": sport_added,
+            "duplicatesMerged": len(report["duplicates"]),
+            "calendarGamesNotCollected": len(report["missingFromCollected"]),
+            "teamsKnown": len(teams),
+            "teamSchedulesRead": len(verified),
+            "teamSchedulesUnreadable": len(report["teamSchedulesUnreadable"]),
             "detailPagesChecked": len(details),
             "scoresFound": scores_found,
-            "playedGamesStillWithoutScore": waiting,
+            "playedGamesStillWithoutScore": len(report["playedWithoutScore"]),
             "requests": fetcher.requests_made,
-            "lastFullRefresh": now.isoformat(timespec="seconds") if full else prev_sync.get("lastFullRefresh"),
+            "lastFullRefresh": stamp if full else prev_sync.get("lastFullRefresh"),
+            "lastDiscovery": stamp if discovered else prev_sync.get("lastDiscovery"),
+            "teams": teams,
             "changes": summary,
-            "warnings": warnings[:20],
+            "warnings": warnings[:25],
         }
         result = build_output(previous, games, now, sync_info)
         changed = _comparable(previous.get("games", [])) != _comparable(games) or previous["meta"].get("source") != "psal"
         write_json(out_path, result)
-        log.info("Sync OK: %d games in window, %d total, changes=%s", len(fresh), len(games), summary)
+        log.info("Sync OK: %d games in window (%d from the calendar, +%d team schedules, +%d sport pages), changes=%s",
+                 sync_info["gamesInWindow"], len(cal_entries), team_added, sport_added, summary)
         for w in warnings:
             log.warning(w)
         gh_output(status="ok", changed=str(changed and not args.preview).lower())
         gh_summary(summary_markdown(result, args.preview, detail_report))
+        gh_summary(report_markdown(report, now))
         return EXIT_OK
     except SourceUnavailable as e:
         log.warning("PSAL temporarily unavailable — keeping previous data. %s", e)
@@ -1238,11 +1879,47 @@ def run_sync(args, fetcher: Fetcher | None = None, now: datetime | None = None) 
         return EXIT_ERROR
 
 
+def write_reports(report: dict, now: datetime) -> None:
+    REPORT_DIR.mkdir(parents=True, exist_ok=True)
+    (REPORT_DIR / "completeness.json").write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
+    (REPORT_DIR / "completeness.md").write_text(report_markdown(report, now), encoding="utf-8")
+
+
+def _annotate(kind: str, title: str, msg: str) -> None:
+    """GitHub Actions log annotation (shows on the run page); plain log line elsewhere."""
+    if os.environ.get("GITHUB_ACTIONS"):
+        print(f"::{kind} title={title}::{msg}", flush=True)
+    else:
+        log.warning("%s: %s", title, msg)
+
+
+def log_completeness(report: dict, cal_entries: dict) -> None:
+    log.info("Completeness: %d calendar games · %d not collected · %d found only on other PSAL pages · "
+             "%d duplicates merged · %d played games without a score",
+             len(cal_entries), len(report["missingFromCollected"]), len(report["notOnCalendar"]),
+             len(report["duplicates"]), len(report["playedWithoutScore"]))
+    for m in report["missingFromCollected"]:
+        _annotate("warning", "Calendar game not collected", f"{m['date']} {m['teamLine']} {m['calendar']} (#{m['key']})")
+    for code in report["teamSchedulesUnreadable"]:
+        _annotate("warning", "Team schedule unreadable", f"{code}: {team_profile_url(code)}")
+    for c in report["scoreConflicts"]:
+        _annotate("warning", "Score conflict", f"{c['id']}: game page {c['detail']} vs team schedule {c['team']}")
+    if report["notOnCalendar"]:
+        _annotate("notice", "Games beyond the school calendar",
+                  f"{len(report['notOnCalendar'])} Bronx Science games were found on team schedules / sport pages but not on the school calendar")
+    for d, v in report["perDate"].items():
+        log.info("  %s: calendar %d, collected %d, missing %s, only elsewhere %s",
+                 d, v["calendar"], v["collected"], v["missing"] or "-", v["extra"] or "-")
+
+
 def summary_markdown(data: dict, preview: bool, detail_report: list | None = None) -> str:
     s = data["meta"]["sync"]
     lines = [f"## {'Preview' if preview else 'Sync'} result",
-             f"- Window: {s['window'][0]} → {s['window'][1]} · games found: **{s['gamesInWindow']}**",
-             f"- Sport pages: {s['sportPages']} (matched {s['sportPageMatches']} games) · "
+             f"- Window: {s['window'][0]} → {s['window'][1]} · games: **{s['gamesInWindow']}** "
+             f"({s['calendarGames']} on the school calendar, +{s['addedFromTeamSchedules']} from team schedules, "
+             f"+{s['addedFromSportPages']} from sport pages, {s['duplicatesMerged']} duplicates merged)",
+             f"- Teams: {s['teamsKnown']} known, {s['teamSchedulesRead']} schedules read, "
+             f"{s['teamSchedulesUnreadable']} unreadable · "
              f"detail pages: {s['detailPagesChecked']} (scores read: {s['scoresFound']}) · "
              f"played games still without a score: {s.get('playedGamesStillWithoutScore', 'n/a')}",
              f"- Changes: `{json.dumps(s['changes'])}` · requests to PSAL: {s['requests']}"]
@@ -1290,7 +1967,21 @@ def run_probe(args) -> int:
             code = entries[0]["code"]
             sp = fetcher.get_html(f"{BASE}{SPORT_PATH}?spCode={code}&flag=All", f"sport_{code}")
             info = parse_sport_page(sp)
-            report.append(f"- Sport page {code}: Bronx Science events parsed: {len(info)}")
+            report.append(f"- Sport page {code}: Bronx Science events parsed: {len(info)}; "
+                          f"Bronx Science teams in its directory: {parse_team_directory(sp)}")
+            home_codes = parse_sport_nav(fetcher.get_html(f"{BASE}/", "home")) if fetcher.allowed(f"{BASE}/") else []
+            report.append(f"- Sport pages linked from PSAL navigation: {len(home_codes)} {home_codes[:40]}")
+            tcodes = list(dict.fromkeys(e["code"] for e in entries))[:2]
+            sched, w3 = fetch_team_schedules(fetcher, tcodes, DEBUG_DIR)
+            for tc in tcodes:
+                rows = sched.get(tc)
+                t = parse_team_line(next((e["teamLine"] for e in entries if e["code"] == tc), "")) or {}
+                parsed, skipped = parse_team_rows(rows or [], tc, t, datetime.now(TZ).date())
+                report.append(f"- Team schedule {tc} ({team_profile_url(tc)}): rows {None if rows is None else len(rows)}, "
+                              f"games parsed {len(parsed)}, skipped {skipped} {w3[:2]}")
+                for g in parsed[:6]:
+                    report.append(f"  - {g['date']} {g.get('time')} vs {g.get('opponent')} ({g.get('homeAway')}) "
+                                  f"result={g.get('result')} round={g.get('round')} id={g.get('gid')} | {g['raw'][:90]}")
             for k, v in list(info.items())[:5]:
                 report.append(f"  - {k}: {v}")
             today = datetime.now(TZ).date().isoformat()
