@@ -16,6 +16,10 @@ window.BXSData = (function () {
   'use strict';
 
   const DATA_URL = 'games.json';
+  // Small "still checking PSAL" file written by the sync after every successful
+  // check (see vercel.json rewrite in the workflow). Lets "Last updated" stay
+  // truthful when a check found no changes and the site was not redeployed.
+  const HEARTBEAT_URL = 'sync-status.json';
 
   const STATUSES = ['scheduled', 'final', 'postponed', 'canceled'];
   const HOME_AWAY = ['home', 'away', 'neutral'];
@@ -28,7 +32,27 @@ window.BXSData = (function () {
     const res = await fetch(url, { cache: 'no-cache' });
     if (!res.ok) throw new Error(`Could not load ${DATA_URL} (HTTP ${res.status})`);
     const raw = await res.json();
-    return normalize(raw);
+    const data = normalize(raw);
+    await applyHeartbeat(data, raw);
+    return data;
+  }
+
+  /** Use the newer "checked PSAL at" time, but ONLY if that check confirmed
+   *  exactly the data this page is showing (same dataHash). Any problem → ignore. */
+  async function applyHeartbeat(data, raw) {
+    const hash = raw && raw.meta && raw.meta.dataHash;
+    if (!hash || data.meta.source !== 'psal') return;
+    try {
+      const res = await fetch(HEARTBEAT_URL, { cache: 'no-store' });
+      if (!res.ok) return;
+      const hb = await res.json();
+      if (!hb || hb.status !== 'ok' || hb.dataHash !== hash) return;
+      const t = Date.parse(hb.checkedAt);
+      if (isNaN(t) || t > Date.now() + 5 * 60e3) return;           // ignore clock nonsense
+      if (!data.meta.lastSynced || t > Date.parse(data.meta.lastSynced)) {
+        data.meta.lastSynced = hb.checkedAt;
+      }
+    } catch (e) { /* heartbeat is optional */ }
   }
 
   /** Validate + clean the raw JSON so the UI can trust every field. */
