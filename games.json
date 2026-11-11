@@ -3,7 +3,7 @@
     "schemaVersion": 1,
     "school": "Bronx High School of Science",
     "source": "psal",
-    "lastSynced": "2026-11-11T17:58:44-05:00",
+    "lastSynced": "2026-11-11T18:11:52-05:00",
     "notes": "Collected automatically from public pages on psal.org. Unofficial — PSAL's website is the official source.",
     "seasons": [
       {
@@ -31,12 +31,12 @@
       ],
       "gamesInWindow": 267,
       "calendarGames": 216,
-      "addedFromTeamSchedules": 45,
-      "addedFromSportPages": 1,
+      "addedFromTeamSchedules": 0,
+      "addedFromSportPages": 0,
       "duplicatesMerged": 0,
       "calendarGamesNotCollected": 0,
       "teamsKnown": 43,
-      "teamSchedulesRead": 18,
+      "teamSchedulesRead": 0,
       "teamSchedulesUnreadable": 0,
       "detailPagesChecked": 0,
       "scoresFound": 0,
@@ -45,7 +45,7 @@
       "scoreConflicts": 0,
       "coverageComplete": true,
       "coverageIssues": [],
-      "requests": 49,
+      "requests": 9,
       "lastFullRefresh": "2026-11-11T17:58:44-05:00",
       "lastDiscovery": "2026-11-11T17:29:28-05:00",
       "teams": {
@@ -533,17 +533,17 @@
         }
       },
       "changes": {
-        "added": 45,
+        "added": 0,
         "updated": 7,
         "rescheduled": 0,
         "markedCanceled": 0,
-        "kept": 21,
+        "kept": 22,
         "reidentified": 0
       },
       "warnings": []
     },
     "dayNotes": {},
-    "dataHash": "61aab165e7c4b5bb"
+    "dataHash": "3ac929f117f9b502"
   },
   "games": [
     {
@@ -2986,8 +2986,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#047/506329",
         "teamCode": "047",
         "sources": [
-          "calendar",
-          "sportpage"
+          "calendar"
         ],
         "checkedAt": "2026-11-11T11:36:28-05:00",
         "checks": 1,
@@ -3476,8 +3475,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#047/506333",
         "teamCode": "047",
         "sources": [
-          "calendar",
-          "sportpage"
+          "calendar"
         ],
         "checkedAt": "2026-11-11T11:36:28-05:00",
         "checks": 1,
@@ -4128,8 +4126,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#047/506336",
         "teamCode": "047",
         "sources": [
-          "calendar",
-          "sportpage"
+          "calendar"
         ],
         "checkedAt": "2026-11-11T11:36:28-05:00",
         "checks": 1,
@@ -4191,8 +4188,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#024/503800",
         "teamCode": "024",
         "sources": [
-          "calendar",
-          "sportpage"
+          "calendar"
         ],
         "checkedAt": "2026-11-11T11:36:28-05:00",
         "checks": 1,
@@ -4308,8 +4304,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#024/511111",
         "teamCode": "024",
         "sources": [
-          "calendar",
-          "sportpage"
+          "calendar"
         ],
         "checkedAt": "2026-11-11T11:36:28-05:00",
         "checks": 1,
@@ -4496,8 +4491,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#024/511607",
         "teamCode": "024",
         "sources": [
-          "calendar",
-          "sportpage"
+          "calendar"
         ],
         "checkedAt": "2026-11-11T11:36:28-05:00",
         "checks": 1,
@@ -4835,8 +4829,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#047/511548",
         "teamCode": "047",
         "sources": [
-          "calendar",
-          "sportpage"
+          "calendar"
         ],
         "checkedAt": "2026-11-11T11:36:28-05:00",
         "checks": 1,
@@ -5048,8 +5041,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#047/511716",
         "teamCode": "047",
         "sources": [
-          "calendar",
-          "sportpage"
+          "calendar"
         ],
         "checkedAt": "2026-11-11T11:36:28-05:00",
         "checks": 1,
@@ -5081,8 +5073,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#024/511677",
         "teamCode": "024",
         "sources": [
-          "calendar",
-          "sportpage"
+          "calendar"
         ],
         "checkedAt": "2026-11-11T11:36:28-05:00",
         "checks": 1,
@@ -5488,8 +5479,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#024/511679",
         "teamCode": "024",
         "sources": [
-          "calendar",
-          "sportpage"
+          "calendar"
         ],
         "checkedAt": "2026-11-11T11:36:28-05:00",
         "checks": 1,
@@ -5573,8 +5563,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#024/511680",
         "teamCode": "024",
         "sources": [
-          "calendar",
-          "sportpage"
+          "calendar"
         ],
         "checkedAt": "2026-11-11T11:36:28-05:00",
         "checks": 1,
@@ -5769,8 +5758,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#013/510401",
         "teamCode": "013",
         "sources": [
-          "calendar",
-          "sportpage"
+          "calendar"
         ]
       }
     },
@@ -5900,8 +5888,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#013/510403",
         "teamCode": "013",
         "sources": [
-          "calendar",
-          "sportpage"
+          "calendar"
         ]
       }
     },
@@ -5953,8 +5940,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#066/510766",
         "teamCode": "066",
         "sources": [
-          "calendar",
-          "sportpage"
+          "calendar"
         ]
       }
     },
@@ -5969,7 +5955,7 @@
       "event": null,
       "round": null,
       "homeAway": "home",
-      "location": "Bronx HS Science - Gym 2",
+      "location": "Location TBA",
       "status": "scheduled",
       "score": null,
       "resultText": null,
@@ -5980,8 +5966,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#019/9955",
         "teamCode": "019",
         "sources": [
-          "calendar",
-          "sportpage"
+          "calendar"
         ]
       }
     },
@@ -6033,8 +6018,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#013/510406",
         "teamCode": "013",
         "sources": [
-          "calendar",
-          "sportpage"
+          "calendar"
         ]
       }
     },
@@ -6060,8 +6044,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#065/510687",
         "teamCode": "065",
         "sources": [
-          "calendar",
-          "sportpage"
+          "calendar"
         ]
       }
     },
@@ -6087,8 +6070,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#017/510266",
         "teamCode": "017",
         "sources": [
-          "calendar",
-          "sportpage"
+          "calendar"
         ]
       }
     },
@@ -6192,8 +6174,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#065/510688",
         "teamCode": "065",
         "sources": [
-          "calendar",
-          "sportpage"
+          "calendar"
         ]
       }
     },
@@ -6219,8 +6200,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#017/510268",
         "teamCode": "017",
         "sources": [
-          "calendar",
-          "sportpage"
+          "calendar"
         ]
       }
     },
@@ -6443,7 +6423,7 @@
       "event": null,
       "round": null,
       "homeAway": "away",
-      "location": "Susan E. Wagner HS: Gym 2",
+      "location": "Location TBA",
       "status": "scheduled",
       "score": null,
       "resultText": null,
@@ -6454,8 +6434,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#019/9946",
         "teamCode": "019",
         "sources": [
-          "calendar",
-          "sportpage"
+          "calendar"
         ]
       }
     },
@@ -6574,7 +6553,7 @@
       "event": null,
       "round": null,
       "homeAway": "away",
-      "location": "Bronx HS Science - Gym 2",
+      "location": "Location TBA",
       "status": "scheduled",
       "score": null,
       "resultText": null,
@@ -6585,8 +6564,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#019/9936",
         "teamCode": "019",
         "sources": [
-          "calendar",
-          "sportpage"
+          "calendar"
         ]
       }
     },
@@ -6601,7 +6579,7 @@
       "event": null,
       "round": null,
       "homeAway": "home",
-      "location": "Bronx HS Science - Gym 2",
+      "location": "Location TBA",
       "status": "scheduled",
       "score": null,
       "resultText": null,
@@ -6612,8 +6590,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#019/9937",
         "teamCode": "019",
         "sources": [
-          "calendar",
-          "sportpage"
+          "calendar"
         ]
       }
     },
@@ -6810,7 +6787,7 @@
       "event": null,
       "round": null,
       "homeAway": "away",
-      "location": "Christopher Columbus HS - GYM",
+      "location": "Location TBA",
       "status": "scheduled",
       "score": null,
       "resultText": null,
@@ -6821,8 +6798,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#019/9947",
         "teamCode": "019",
         "sources": [
-          "calendar",
-          "sportpage"
+          "calendar"
         ]
       }
     },
@@ -6837,7 +6813,7 @@
       "event": null,
       "round": null,
       "homeAway": "home",
-      "location": "Bronx HS Science - Gym 2",
+      "location": "Location TBA",
       "status": "scheduled",
       "score": null,
       "resultText": null,
@@ -6848,8 +6824,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#019/9948",
         "teamCode": "019",
         "sources": [
-          "calendar",
-          "sportpage"
+          "calendar"
         ]
       }
     },
@@ -7696,7 +7671,7 @@
       "event": null,
       "round": null,
       "homeAway": "home",
-      "location": "Bronx HS Science - Gym 2",
+      "location": "Location TBA",
       "status": "scheduled",
       "score": null,
       "resultText": null,
@@ -7707,8 +7682,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#019/9968",
         "teamCode": "019",
         "sources": [
-          "calendar",
-          "sportpage"
+          "calendar"
         ]
       }
     },
