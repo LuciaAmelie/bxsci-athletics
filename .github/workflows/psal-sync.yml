@@ -1,0 +1,163 @@
+# ------------------------------------------------------------------
+# BXSCI Athletics — PSAL sync + GitHub Pages deploy
+#
+#  • schedule (every 30 min): sync from psal.org and publish the site.
+#      Only runs after you set the repository variable
+#      PSAL_SYNC_ENABLED = true  (Settings → Secrets and variables → Actions → Variables).
+#  • Run workflow (manual):
+#      preview → collect from PSAL, show a table in the run summary, publish NOTHING
+#      sync    → collect and publish
+#      probe   → save raw PSAL pages as a downloadable artifact (for debugging)
+#  • push to main: redeploy the site files with the newest data (no PSAL requests).
+#
+# Requires: Settings → Pages → Build and deployment → Source = "GitHub Actions".
+# ------------------------------------------------------------------
+name: PSAL sync & deploy
+
+on:
+  schedule:
+    # Every 30 minutes, offset from :00/:30 because GitHub delays jobs that start on the hour.
+    # Times are UTC; GitHub may still start a scheduled run late or occasionally skip one.
+    - cron: "11,41 * * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "preview (safe check) · sync (publish) · probe (save raw PSAL pages)"
+        type: choice
+        options: [preview, sync, probe]
+        default: preview
+  push:
+    branches: [main]
+
+permissions:
+  contents: write   # commit games.json when games change (backup + history)
+  pages: write
+  id-token: write
+
+# Never run two syncs at once; a queued run waits for the current one.
+concurrency:
+  group: psal-sync
+  cancel-in-progress: false
+
+env:
+  SYNC_CONTACT: ${{ github.server_url }}/${{ github.repository }}
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  sync:
+    if: github.event_name != 'schedule' || vars.PSAL_SYNC_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    outputs:
+      deploy: ${{ steps.build.outputs.deploy }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Choose mode
+        id: mode
+        run: |
+          case "${{ github.event_name }}" in
+            workflow_dispatch) MODE="${{ inputs.mode }}" ;;
+            schedule)          MODE="sync" ;;
+            *)                 MODE="prepare" ;;   # push: redeploy only
+          esac
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "Mode: $MODE"
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: sync/requirements.txt
+
+      - name: Install Python packages
+        run: pip install -r sync/requirements.txt
+
+      - name: Install headless Chromium (reads score pages)
+        if: steps.mode.outputs.mode != 'prepare'
+        run: python -m playwright install --with-deps chromium
+
+      - name: Find the published site
+        id: pages
+        uses: actions/configure-pages@v6
+        continue-on-error: true
+
+      - name: Download the currently published games.json
+        run: |
+          BASE="${{ steps.pages.outputs.base_url }}"
+          if [ -n "$BASE" ] && curl -fsSL --max-time 30 "$BASE/games.json?nocache=$GITHUB_RUN_ID" -o live-games.json; then
+            echo "Downloaded live copy from $BASE"
+          else
+            echo "No published copy yet — using the repository's games.json."
+            rm -f live-games.json
+          fi
+
+      - name: Run (${{ steps.mode.outputs.mode }})
+        id: run
+        env:
+          MODE: ${{ steps.mode.outputs.mode }}
+        run: |
+          case "$MODE" in
+            sync)    python sync/psal_sync.py sync    --data games.json --previous live-games.json ;;
+            preview) python sync/psal_sync.py preview --data games.json --previous live-games.json ;;
+            probe)   python sync/psal_sync.py probe ;;
+            prepare) python sync/psal_sync.py prepare --data games.json --previous live-games.json ;;
+          esac
+
+      - name: Save preview / debug pages
+        if: always() && (steps.mode.outputs.mode == 'probe' || steps.mode.outputs.mode == 'preview' || steps.run.outputs.status == 'error' || steps.run.outcome == 'failure')
+        uses: actions/upload-artifact@v7
+        with:
+          name: psal-${{ steps.mode.outputs.mode }}-${{ github.run_id }}
+          path: |
+            sync/debug/
+            sync/preview/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Commit games.json (only when games changed)
+        if: steps.mode.outputs.mode == 'sync' && steps.run.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add games.json
+          git commit -m "PSAL sync: games updated $(TZ=America/New_York date '+%b %-d, %-I:%M %p ET')"
+          if ! git pull --rebase origin "${GITHUB_REF_NAME}"; then
+            git rebase --abort || true
+            echo "::warning::Could not rebase the data commit (someone pushed at the same time). The site is still deployed; the backup commit will happen on the next change."
+            exit 0
+          fi
+          git push || echo "::warning::Push of games.json backup failed; the site is still deployed."
+
+      - name: Build site folder
+        id: build
+        env:
+          MODE: ${{ steps.mode.outputs.mode }}
+          STATUS: ${{ steps.run.outputs.status }}
+        run: |
+          if [ "$MODE" = "prepare" ] || { [ "$MODE" = "sync" ] && [ "$STATUS" = "ok" ]; }; then
+            mkdir -p _site
+            cp index.html style.css script.js data.js games.json _site/
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            echo "Nothing new to publish (mode=$MODE, status=${STATUS:-n/a})."
+          fi
+
+      - name: Upload site
+        if: steps.build.outputs.deploy == 'true'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    needs: sync
+    if: needs.sync.outputs.deploy == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
