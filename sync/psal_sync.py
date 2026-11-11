@@ -1047,6 +1047,20 @@ TEAM_ROWS_JS = r"""() => {
 }"""
 
 
+TEAM_HEADING_RE = re.compile(r"^([A-Z][A-Z &/.'\-]{2,30}?)\s+(BOYS|GIRLS|COED|MIXED)\s+"
+                             r"(VARSITY|JV|JR\.? VARSITY|JUNIOR VARSITY|F/S.*|FROSH.*)$")
+
+
+def team_heading(text: str) -> str | None:
+    """The team page's own title line, e.g. 'BASEBALL BOYS VARSITY' (present even out of season)."""
+    return next((norm(l) for l in (text or "").splitlines() if TEAM_HEADING_RE.match(norm(l))), None)
+
+
+def heading_of(rows: list | None) -> dict | None:
+    h = next((r.get("heading") for r in rows or [] if isinstance(r, dict) and r.get("heading")), None)
+    return parse_team_line(h) if h else None
+
+
 def fetch_team_schedules(fetcher: Fetcher, codes: list[str], debug_dir: Path | None) -> tuple[dict, list[str]]:
     """Render team profile FULL SCHEDULE tabs. Returns ({code: rows or None if unreadable}, warnings)."""
     results: dict[str, list | None] = {}
@@ -1088,6 +1102,9 @@ def fetch_team_schedules(fetcher: Fetcher, codes: list[str], debug_dir: Path | N
                 page.wait_for_timeout(800)
                 rows = page.evaluate(TEAM_ROWS_JS)
                 text = page.inner_text("body")
+                h = team_heading(text)
+                if h:
+                    rows = [{"heading": h}] + list(rows or [])
             except Exception as e:
                 warnings.append(f"Could not read team schedule {code}: {e}")
                 results[code] = None
@@ -1425,6 +1442,11 @@ def completeness(report: dict, cal_entries: dict[str, dict], fresh: dict[str, di
         else:
             day["missing"].append(f"{e.get('teamLine') or '?'} {e['text']} (#{key})")
             report["missingFromCollected"].append({"date": e["date"], "calendar": e["text"], "teamLine": e.get("teamLine"), "key": key})
+    cw = report.get("calendarWindow")
+    if cw:
+        beyond = [x for x in report["notOnCalendar"] if not (cw[0] <= x["date"] <= cw[1])]
+        report["notOnCalendar"] = [x for x in report["notOnCalendar"] if cw[0] <= x["date"] <= cw[1]]
+        report["beyondCalendarMonths"] = len(beyond)
     for item in report["notOnCalendar"]:
         per_date.setdefault(item["date"], {"calendar": 0, "collected": 0, "missing": [], "extra": []})["extra"].append(
             f"{item['team']} vs {item['opponent']} (from {item['source']})")
@@ -1494,6 +1516,9 @@ def completeness(report: dict, cal_entries: dict[str, dict], fresh: dict[str, di
                    if t.get("readAt") and _hours_since(t.get("readAt"), now) > 2 * OFFSEASON_REFRESH_HOURS)
     if stale:
         issues.append(f"{len(stale)} team schedule(s) not read in over {2 * OFFSEASON_REFRESH_HOURS} h: {', '.join(stale)}")
+    for c, t in sorted(report["teams"].items()):
+        if t.get("readNow") and (t.get("rows") or 0) > 0 and not t.get("games") and not t.get("outOfRange"):
+            issues.append(f"team {c}: {t['rows']} schedule rows but no games could be parsed — check sync/debug/team_{c}.json")
     if report["teamSchedulesUnreadable"]:
         issues.append(f"team schedule(s) unreadable this run: {', '.join(report['teamSchedulesUnreadable'])}")
     if report["detailNotLoaded"]:
@@ -1553,10 +1578,10 @@ def report_markdown(report: dict, now: datetime) -> str:
         for p in sorted(report["playedWithoutScore"], key=lambda x: x["date"], reverse=True):
             L.append(f"| {p['date']} | {p['team']} | {p['opponent']} | {p['reason']} |")
     if report["teams"]:
-        L += ["", "## Bronx Science teams", "| Code | Team | Schedule rows read | Games parsed | Last read |", "|---|---|---|---|---|"]
+        L += ["", "## Bronx Science teams", "| Code | Team | Schedule rows read | Games this school year | Rows from other school years | Last read |", "|---|---|---|---|---|---|"]
         for c, v in sorted(report["teams"].items()):
-            L.append(f"| {c} | {v.get('gender', '')} {v.get('level', '')} {v.get('sport') or '?'} | {v.get('rows', '—')} | "
-                     f"{v.get('games', '—')} | {v.get('readAt', 'never')} |")
+            L.append(f"| {c} | {v.get('gender') or ''} {v.get('level') or ''} {v.get('sport') or '?'} | {v.get('rows', '—')} | "
+                     f"{v.get('games', '—')} | {v.get('outOfRange') or 0} | {v.get('readAt') or 'never'} |")
     return "\n".join(L)
 
 
@@ -1983,7 +2008,8 @@ def pick_team_codes(teams: dict, fresh: dict, previous: dict, now: datetime) -> 
         in_season = code in near or t.get("gamesInWindow", 0) > 0
         gap = TEAM_REFRESH_HOURS if in_season else OFFSEASON_REFRESH_HOURS
         if code in recent or _hours_since(t.get("readAt"), now) >= gap:
-            due.append((0 if code in recent else 1 if in_season else 2, t.get("readAt") or "", code))
+            never = not t.get("readAt")
+            due.append((0 if code in recent else 1 if never else 2 if in_season else 3, t.get("readAt") or "", code))
     due.sort()
     return [c for _, _, c in due[:MAX_TEAM_PAGES]]
 
@@ -2025,6 +2051,8 @@ def run_sync(args, fetcher: Fetcher | None = None, now: datetime | None = None) 
 
         # 3. Cross-check: each team's FULL SCHEDULE (whole school year: late scores for older games still arrive here)
         team_from = min(window[0], school_year_start(today))
+        team_to = max(window[1], date(school_year_start(today).year + 1, 7, 31))
+        report["calendarWindow"] = [window[0].isoformat(), window[1].isoformat()]
         team_codes = pick_team_codes(teams, fresh, previous, now)
         schedules, w = fetch_team_schedules(fetcher, team_codes, DEBUG_DIR)
         warnings += w
@@ -2037,14 +2065,20 @@ def run_sync(args, fetcher: Fetcher | None = None, now: datetime | None = None) 
             if rows is None:
                 report["teamSchedulesUnreadable"].append(code)
                 continue
-            entries, _skipped = parse_team_rows(rows, code, t, today)
-            entries = [e for e in entries if team_from.isoformat() <= e["date"] <= window[1].isoformat()]
+            info = heading_of(rows)
+            if info:                                    # the page's own title is authoritative
+                t.update({k: info[k] for k in ("sport", "gender", "level")})
+            game_rows = [r for r in rows if not (isinstance(r, dict) and r.get("heading"))]
+            all_entries, _skipped = parse_team_rows(game_rows, code, t, today)
+            entries = [e for e in all_entries if team_from.isoformat() <= e["date"] <= team_to.isoformat()]
+            t["outOfRange"] = len(all_entries) - len(entries)
             for e in entries:
                 if e.get("idMismatch"):
                     report["scoreConflicts"].append({"id": f"{e['code']}/{e['gid']}", "detail": "row game id differs from its link",
                                                      "team": e.get("raw")})
             known_here = [g for g in fresh.values() if (g.get("psal") or {}).get("teamCode") == code]
-            t.update({"readAt": stamp, "rows": len(rows), "games": len(entries), "gamesInWindow": len(entries), "readNow": True})
+            in_win = sum(1 for e in entries if window[0].isoformat() <= e["date"] <= window[1].isoformat())
+            t.update({"readAt": stamp, "rows": len(game_rows), "games": len(entries), "gamesInWindow": in_win, "readNow": True})
             if known_here and not entries:
                 # The calendar shows games for this team but its schedule gave none: a reading problem, not proof of removal.
                 report["teamSchedulesUnreadable"].append(code)
@@ -2116,7 +2150,7 @@ def run_sync(args, fetcher: Fetcher | None = None, now: datetime | None = None) 
 
         # 7. Completeness check
         for code, t in teams.items():
-            report["teams"][code] = {k: t.get(k) for k in ("sport", "gender", "level", "rows", "games", "readAt", "readNow")}
+            report["teams"][code] = {k: t.get(k) for k in ("sport", "gender", "level", "rows", "games", "outOfRange", "readAt", "readNow")}
         completeness(report, cal_entries, fresh, games, details, prev_by_id, now)
         write_reports(report, now)
         log_completeness(report, cal_entries)
@@ -2275,8 +2309,8 @@ def run_probe(args) -> int:
             sched, w3 = fetch_team_schedules(fetcher, tcodes, DEBUG_DIR)
             for tc in tcodes:
                 rows = sched.get(tc)
-                t = parse_team_line(next((e["teamLine"] for e in entries if e["code"] == tc), "")) or {}
-                parsed, skipped = parse_team_rows(rows or [], tc, t, datetime.now(TZ).date())
+                t = heading_of(rows) or parse_team_line(next((e["teamLine"] for e in entries if e["code"] == tc), "")) or {}
+                parsed, skipped = parse_team_rows([r for r in rows or [] if not r.get("heading")], tc, t, datetime.now(TZ).date())
                 report.append(f"- Team schedule {tc} ({team_profile_url(tc)}): rows {None if rows is None else len(rows)}, "
                               f"games parsed {len(parsed)}, skipped {skipped} {w3[:2]}")
                 for g in parsed[:6]:
