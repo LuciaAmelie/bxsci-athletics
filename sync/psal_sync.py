@@ -628,6 +628,76 @@ def classify_status(text: str | None) -> str:
     return "unknown"
 
 
+# PSAL game pages (verified against 51 saved pages, Nov 2026) all start their results like this:
+#
+#   GAME/MEET RESULTS
+#   James Monroe Campus                  <- team-level summary: school / final / school / final
+#   1
+#   The Bronx High School of Science
+#   2
+#   Team<TAB>Final                        <- the same result as a table (soccer adds halves,
+#   James Monroe Campus<TAB>1                volleyball adds Match1..3; swimming has no table)
+#   The Bronx High School of Science<TAB>2
+#   Game A / Singles Match 1 / Player ...  <- individual games, matches and athletes follow
+#
+# The official team result is read ONLY from that block, so athlete rows ("FRANCISCO ROSADO
+# ESPINOSA 91"), "Singles Match 1" and "Total of Game A 383" can never be mistaken for a team.
+# Pages have no "Status" field. An unposted result shows 0 / 0 with nothing under it.
+FOOTER_LINES = {"contact us", "staff", "job opportunities", "doe login", "feedback"}
+
+
+def read_results_block(text: str) -> dict | None:
+    raw = [l.replace("\xa0", " ").rstrip() for l in text.split("\n")]
+    starts = [i for i, l in enumerate(raw) if l.strip().upper() == "GAME/MEET RESULTS"]
+    for start in starts:
+        body = [(i, l) for i, l in enumerate(raw[start + 1:], start + 1) if l.strip()]
+        if len(body) < 4:
+            continue
+        (i0, n0), (i1, v0), (i2, n1), (i3, v1) = body[:4]
+        if not (NUM_ONLY_RE.match(v0.strip()) and NUM_ONLY_RE.match(v1.strip())
+                and re.search(r"[A-Za-z]{3}", n0) and re.search(r"[A-Za-z]{3}", n1)
+                and "\t" not in n0 and "\t" not in n1):
+            continue
+        summary = [(norm(n0), _num(v0.strip())), (norm(n1), _num(v1.strip()))]
+        table = None
+        rest = body[4:]
+        k = 0
+        if rest and rest[0][1].strip().lower().startswith("team\t"):
+            header = [c.strip().lower() for c in rest[0][1].split("\t")]
+            if "final" in header and len(rest) >= 3:
+                fi = header.index("final")
+                rows = []
+                for _, line in rest[1:3]:
+                    cells = [c.strip() for c in line.split("\t")]
+                    if len(cells) > fi and NUM_ONLY_RE.match(cells[fi]):
+                        rows.append((norm(cells[0]), _num(cells[fi])))
+                if len(rows) == 2:
+                    table = rows
+                    k = 3
+        details = [l for _, l in rest[k:] if l.strip() and l.strip().lower() not in FOOTER_LINES
+                   and not l.strip().startswith("©")]
+        return {"summary": summary, "table": table, "hasDetails": bool(details), "line": i0}
+    return None
+
+
+def score_from_block(blk: dict, opponent: str | None) -> tuple[dict | None, str]:
+    pairs = blk["summary"]
+    if blk["table"]:
+        s1 = sorted((BXS_RE.search(n) is not None, v) for n, v in pairs)
+        s2 = sorted((BXS_RE.search(n) is not None, v) for n, v in blk["table"])
+        if s1 != s2:
+            return None, f"team summary {pairs} and Final column {blk['table']} disagree"
+    bx = [p for p in pairs if BXS_RE.search(p[0])]
+    other = [p for p in pairs if not BXS_RE.search(p[0])]
+    if len(bx) != 1 or len(other) != 1:
+        return None, f"results block doesn't show Bronx Science vs one opponent: {pairs}"
+    if opponent and not (_name_matches(other[0][0], opponent) or _name_matches(opponent, other[0][0])):
+        return None, f"page result is vs {other[0][0]!r}, but the scheduled opponent is {opponent!r}"
+    if bx[0][1] == 0 and other[0][1] == 0 and not blk["hasDetails"]:
+        return None, "0–0 with no games/matches listed: result not posted yet"
+    return {"bxsci": bx[0][1], "opponent": other[0][1]}, "team results block"
+
+
 def extract_score(lines: list[str], skip: set[int], opponent: str | None, sport: str | None) -> tuple[dict | None, str]:
     """
     Find Bronx Science's and the opponent's final score in the visible text of a game page.
@@ -757,16 +827,31 @@ def parse_detail_text(text: str, opponent: str | None = None, sport: str | None 
 
     status = value("status")
     out: dict[str, Any] = {"status": status, "time": parse_time(value("time") or ""), "score": None}
-    for lab in ("sport", "game/meet", "date", "address", "location", "venue", "referees", "head coaches",
-                "athletic trainer"):
+    gm = value("game/meet")
+    out["gameId"] = gm if gm and gm.isdigit() else None
+    dv = value("date")
+    try:
+        out["date"] = datetime.strptime(norm(dv), "%a %b %d %Y").date().isoformat() if dv else None
+    except ValueError:
+        out["date"] = None
+    for lab in ("sport", "address", "location", "venue", "referees", "head coaches", "athletic trainer"):
         value(lab)
+
+    state = classify_status(status)
+    blk = read_results_block(text)
+    if blk is not None:
+        score, reason = score_from_block(blk, opponent)
+        if score is not None and state in ("off", "notplayed"):
+            score, reason = None, f"PSAL status is '{status}' (not a final result)"
+        out.update(score=score, statusClass=state, resultsBlock=blk["summary"],
+                   scoreReason=f"read ({reason})" if score is not None else reason)
+        return out
     # Date / time-looking lines are never scores.
     for i, l in enumerate(lines):
         if re.search(r"\d{1,2}/\d{1,2}/\d{2,4}|\d{1,2}:\d{2}", l):
             skip.add(i)
 
-    state = classify_status(status)
-    score, reason = extract_score(lines, skip, opponent, sport)
+    score, reason = extract_score(lines, skip, opponent, sport)   # pages without PSAL's results block
     if score is not None:
         if state in ("off", "notplayed"):
             score, reason = None, f"numbers found but PSAL status is '{status}' (not a final result)"
@@ -838,6 +923,15 @@ def fetch_details(fetcher: Fetcher, targets: list[tuple], debug_dir: Path | None
             results[game_key(code, gid)] = parse_detail_text(text, opponent, sport)
         browser.close()
     return results, warnings, network
+
+
+def flag_conflict(g: dict, team_score, detail_score) -> None:
+    """Two PSAL pages disagree: show no score (site says 'Awaiting result'), keep both in the data and report."""
+    g["score"] = None
+    if g.get("status") == "final" and not g.get("resultText"):
+        g["status"] = "scheduled"
+    g.setdefault("psal", {})["scoreConflict"] = {"team": team_score, "detail": detail_score}
+    g["psal"]["scoreSource"] = None
 
 
 def apply_detail(g: dict, d: dict) -> None:
@@ -1052,6 +1146,66 @@ def playoff_label(text: str) -> str | None:
     return "Championship"
 
 
+SCORE_CELL_RE = re.compile(r"^\d{1,4}(?:\.\d+)?$")
+ROW_DATE_RE = re.compile(r"^(\d{1,2})/(\d{1,2})/(\d{4})\b")
+ROW_ID_RE = re.compile(r"^\*?(\d{3,})$")
+FORFEIT_SCORE = 999
+
+
+def _score_num(s: str) -> int | float:
+    v = float(s)
+    return int(v) if v.is_integer() else round(v, 3)
+
+
+def parse_score_row(cells: list[str], links: list[str], code: str, info: dict, today: date) -> dict | None:
+    """
+    PSAL's FULL SCHEDULE table (verified on real saved pages):
+        [game id] | MM/DD/YYYY time | team listed first | score | team listed second | score | location | note
+    The team listed first is the home team. Scores are TEAM results (bowling 2-1, tennis 5-0,
+    fencing 90.00-81.00, gymnastics 0.000). 999 means a forfeit win. 0-0 is what PSAL shows before
+    a result is posted, so 0-0 is never treated as a score. Returns None if the row isn't this shape.
+    """
+    i = next((k for k, c in enumerate(cells) if ROW_DATE_RE.match(c)), None)
+    if i is None or len(cells) < i + 5:
+        return None
+    team_a, sa, team_b, sb = cells[i + 1:i + 5]
+    if not (SCORE_CELL_RE.match(sa) and SCORE_CELL_RE.match(sb)) or SCORE_CELL_RE.match(team_a) or SCORE_CELL_RE.match(team_b):
+        return None
+    a_is, b_is = bool(BXS_RE.search(team_a)), bool(BXS_RE.search(team_b))
+    if a_is == b_is:
+        return {"skip": True}                      # another school's game, or unreadable
+    m = ROW_DATE_RE.match(cells[i])
+    try:
+        d = date(int(m.group(3)), int(m.group(1)), int(m.group(2)))
+    except ValueError:
+        return None
+    row_id = ROW_ID_RE.match(cells[i - 1]).group(1) if i >= 1 and ROW_ID_RE.match(cells[i - 1]) else None
+    link = next((GAME_HREF_RE.search(h) for h in links if GAME_HREF_RE.search(h or "")), None)
+    gid = link.group(2) if link else row_id
+    rest = cells[i + 5:]
+    location = rest[0] if rest else None
+    note = " ".join(rest[1:]) if len(rest) > 1 else ""
+    low = note.lower()
+    bx, op = (_score_num(sa), _score_num(sb)) if a_is else (_score_num(sb), _score_num(sa))
+    result = forfeit = None
+    status_words = " ".join(w for w in ("postponed", "cancel", "forfeit", "rescheduled", "suspended") if w in low)
+    id_mismatch = bool(link and row_id and link.group(2) != row_id)
+    if FORFEIT_SCORE in (bx, op) and not ("postpon" in low or "cancel" in low):
+        forfeit = "won" if bx == FORFEIT_SCORE else "lost"
+        status_words = status_words if "forfeit" in status_words else (status_words + " forfeit").strip()
+    elif d <= today and not ("postpon" in low or "cancel" in low or "suspend" in low) and (bx, op) != (0, 0) \
+            and not id_mismatch:
+        result = {"bxsci": bx, "opponent": op}
+    return {
+        "code": link.group(1) if link else code, "gid": gid, "teamCode": code,
+        "date": d.isoformat(), "time": parse_time(cells[i]), "opponent": clean_team(team_b if a_is else team_a),
+        "homeAway": "home" if a_is else "away", "location": location, "event": None,
+        "result": result, "forfeit": forfeit, "statusWords": status_words or None,
+        "round": playoff_label(" | ".join(cells)), "sport": info.get("sport"), "gender": info.get("gender"),
+        "level": info.get("level"), "raw": " | ".join(cells)[:200], "idMismatch": id_mismatch,
+    }
+
+
 def parse_team_rows(rows: list[dict], code: str, info: dict, today: date) -> tuple[list[dict], int]:
     """Turn rendered FULL SCHEDULE rows into game entries. Returns (entries, rows skipped)."""
     entries: list[dict] = []
@@ -1062,6 +1216,16 @@ def parse_team_rows(rows: list[dict], code: str, info: dict, today: date) -> tup
         low = text.lower()
         if not cells or "practice" in low or "today's events" in low:
             skipped += 1
+            continue
+        if len(DATE_MD_RE.findall(text)) > 2:
+            skipped += 1          # a wrapper row holding the whole table's text, not one game
+            continue
+        structured = parse_score_row(cells, r.get("links", []), code, info, today)
+        if structured is not None:
+            if structured.get("skip"):
+                skipped += 1
+            else:
+                entries.append(structured)
             continue
         dm = DATE_MD_RE.search(text)
         d = resolve_md_date(int(dm.group(1)), int(dm.group(2)), int(dm.group(3)) if dm.group(3) else None, today) if dm else None
@@ -1191,7 +1355,9 @@ def enrich(g: dict, e: dict, source: str) -> None:
         if st:
             g["status"] = st
             if "forfeit" in e["statusWords"].lower():
-                g["resultText"] = g.get("resultText") or "Forfeit"
+                text = {"won": "Won by forfeit", "lost": "Lost by forfeit"}.get(e.get("forfeit") or "", "Forfeit")
+                if g.get("resultText") in (None, "Forfeit"):
+                    g["resultText"] = text
             if note:
                 g["statusNote"] = note
     if e.get("result") is not None and g.get("score") is None and g["status"] not in ("canceled", "postponed"):
@@ -1236,7 +1402,8 @@ def combine(fresh: dict[str, dict], entries: list[dict], source: str, report: di
 def new_report() -> dict:
     return {"missingFromCollected": [], "notOnCalendar": [], "duplicates": [], "unclassified": [],
             "teams": {}, "teamSchedulesUnreadable": [], "scoreConflicts": [], "playedWithoutScore": [],
-            "unverifiedMissing": [], "perDate": {}}
+            "unverifiedMissing": [], "perDate": {}, "calendarMonths": {"read": 0, "expected": 0},
+            "detailNotLoaded": [], "summary": {}, "weeks": [], "coverage": {"complete": False, "issues": []}}
 
 
 def completeness(report: dict, cal_entries: dict[str, dict], fresh: dict[str, dict], games: list[dict],
@@ -1280,11 +1447,86 @@ def completeness(report: dict, cal_entries: dict[str, dict], fresh: dict[str, di
             why = "not checked yet — queued for the next run (per-run page limit)"
         report["playedWithoutScore"].append({"id": g["id"], "date": g["date"], "team": f"{g['gender']} {g['level']} {g['sport']}",
                                              "opponent": g.get("opponent"), "reason": why})
+
+    # ---- Summary, per-week table and an honest coverage verdict ----
+    def played(g):
+        return g["date"] < today or (g["date"] == today and (g.get("time") or "23:59") <= hm)
+    has_result = lambda g: g.get("score") is not None or bool(g.get("resultText"))
+    head_to_head = {g["id"] for g in games if g.get("opponent") and g["status"] not in ("canceled", "postponed")}
+    report["summary"] = {
+        "gamesFoundOnPsal": len(fresh),
+        "gamesImported": len(games),
+        "withFinalResult": sum(1 for g in games if has_result(g)),
+        "playedAwaitingResult": len(report["playedWithoutScore"]),
+        "scoreConflicts": len(report["scoreConflicts"]),
+        "gamePagesNotLoaded": len(report["detailNotLoaded"]),
+    }
+    weeks: dict[str, dict] = {}
+    for g in games:
+        try:
+            d = date.fromisoformat(g["date"])
+        except (KeyError, ValueError):
+            continue
+        wk = (d - timedelta(days=d.weekday())).isoformat()             # Monday
+        w = weeks.setdefault(wk, {"week": wk, "games": 0, "final": 0, "awaiting": 0, "upcoming": 0, "offCalendar": 0})
+        w["games"] += 1
+        if has_result(g):
+            w["final"] += 1
+        elif g["id"] in head_to_head and played(g):
+            w["awaiting"] += 1
+        elif not played(g):
+            w["upcoming"] += 1
+    off = {x["id"] for x in report["notOnCalendar"]}
+    for g in games:
+        if g["id"] in off:
+            d = date.fromisoformat(g["date"])
+            weeks[(d - timedelta(days=d.weekday())).isoformat()]["offCalendar"] += 1
+    report["weeks"] = [weeks[k] for k in sorted(weeks)]
+
+    issues = []
+    cm = report["calendarMonths"]
+    if cm["expected"] and cm["read"] < cm["expected"]:
+        issues.append(f"school calendar: only {cm['read']} of {cm['expected']} months could be read")
+    never = sorted(c for c, t in report["teams"].items() if not t.get("readAt"))
+    if never:
+        issues.append(f"{len(never)} team schedule(s) never read yet: {', '.join(never)} (queued; up to {MAX_TEAM_PAGES} per run)")
+    stale = sorted(c for c, t in report["teams"].items()
+                   if t.get("readAt") and _hours_since(t.get("readAt"), now) > 2 * OFFSEASON_REFRESH_HOURS)
+    if stale:
+        issues.append(f"{len(stale)} team schedule(s) not read in over {2 * OFFSEASON_REFRESH_HOURS} h: {', '.join(stale)}")
+    if report["teamSchedulesUnreadable"]:
+        issues.append(f"team schedule(s) unreadable this run: {', '.join(report['teamSchedulesUnreadable'])}")
+    if report["detailNotLoaded"]:
+        issues.append(f"{len(report['detailNotLoaded'])} game page(s) did not load this run")
+    if report["missingFromCollected"]:
+        issues.append(f"{len(report['missingFromCollected'])} school-calendar game(s) not collected")
+    queued = sum(1 for p in report["playedWithoutScore"] if p["reason"].startswith("not checked yet"))
+    if queued:
+        issues.append(f"{queued} played game(s) not checked for a score yet (per-run page limit)")
+    report["coverage"] = {"complete": not issues, "issues": issues}
     return report
 
 
 def report_markdown(report: dict, now: datetime) -> str:
     L = [f"# PSAL completeness report — {now:%b %d, %Y %I:%M %p} ET", ""]
+    cov = report.get("coverage") or {}
+    if cov.get("complete"):
+        L.append("**Coverage: COMPLETE** — every known PSAL source was read and checked.")
+    else:
+        L.append("**Coverage: INCOMPLETE** — do not treat missing games/scores as final until these clear:")
+        L += [f"- {i}" for i in cov.get("issues", [])] or ["- (no completeness data)"]
+    sm = report.get("summary") or {}
+    if sm:
+        L += ["", f"- Games found on PSAL (calendar + team schedules + sport pages): **{sm['gamesFoundOnPsal']}**",
+              f"- Games in games.json (incl. earlier history): **{sm['gamesImported']}**",
+              f"- With a published final result: **{sm['withFinalResult']}**",
+              f"- Played, still awaiting a PSAL result: **{sm['playedAwaitingResult']}**",
+              f"- Score conflicts between PSAL pages (not shown on the site): **{sm['scoreConflicts']}**",
+              f"- Game pages that did not load this run: **{sm['gamePagesNotLoaded']}**", ""]
+    if report.get("weeks"):
+        L += ["## By week (Mon–Sun)", "| Week of | Games | Final | Awaiting result | Upcoming | Only on team/sport pages |", "|---|---|---|---|---|---|"]
+        L += [f"| {w['week']} | {w['games']} | {w['final']} | {w['awaiting']} | {w['upcoming']} | {w['offCalendar']} |" for w in report["weeks"]]
+        L.append("")
     t = report["teams"]
     L.append(f"- Bronx Science teams known: **{len(t)}** · team schedules read this run: "
              f"{sum(1 for v in t.values() if v.get('readNow'))} · unreadable: {len(report['teamSchedulesUnreadable'])}")
@@ -1305,7 +1547,7 @@ def report_markdown(report: dict, now: datetime) -> str:
     if report["unclassified"]:
         L += ["", "## Games kept without a sport/team line", *[f"- {u}" for u in report["unclassified"]]]
     if report["scoreConflicts"]:
-        L += ["", "## Score conflicts (game page used)", *[f"- {c['id']}: game page {c['detail']} vs team schedule {c['team']}" for c in report["scoreConflicts"]]]
+        L += ["", "## ⚠️ Score conflicts (no score shown until PSAL pages agree)", *[f"- {c['id']}: game page {c['detail']} vs team schedule {c['team']}" for c in report["scoreConflicts"]]]
     if report["playedWithoutScore"]:
         L += ["", "## Played games without a score", "| Date | Team | Opponent | Why |", "|---|---|---|---|"]
         for p in sorted(report["playedWithoutScore"], key=lambda x: x["date"], reverse=True):
@@ -1373,10 +1615,24 @@ def _comparable(games: list[dict]) -> str:
         g2 = copy.deepcopy(g)
         g2.pop("missingRuns", None)
         if isinstance(g2.get("psal"), dict):
-            for k in ("checkedAt", "checks", "sources", "aliases", "_sportPage"):
+            for k in ("checkedAt", "checks", "sources", "aliases", "_sportPage", "verifiedAt", "scoreSource"):
                 g2["psal"].pop(k, None)
         clean.append(g2)
     return json.dumps(sorted(clean, key=lambda x: x.get("id", "")), sort_keys=True)
+
+
+def data_hash(data: dict) -> str:
+    """Fingerprint of everything visitors can see (games + source + notes), ignoring timestamps
+    and bookkeeping. Same hash = the published site would not change, so no commit / redeploy."""
+    import hashlib
+    meta = data.get("meta") or {}
+    visible = json.dumps({
+        "games": _comparable(data.get("games") or []),
+        "source": meta.get("source"),
+        "seasons": meta.get("seasons") or [],
+        "dayNotes": meta.get("dayNotes") or {},
+    }, sort_keys=True)
+    return hashlib.sha256(visible.encode("utf-8")).hexdigest()[:16]
 
 
 def merge(previous: dict, fresh: dict[str, dict], window: tuple[date, date], today: date,
@@ -1437,11 +1693,12 @@ def merge(previous: dict, fresh: dict[str, dict], window: tuple[date, date], tod
         elif (old.get("statusNote") or "").startswith("Rescheduled from") and not new.get("statusNote"):
             new["statusNote"] = old["statusNote"]
         if isinstance(old.get("psal"), dict):
-            for k in ("checkedAt", "checks", "teamCode"):
+            for k in ("checkedAt", "checks", "teamCode", "scoreSource", "verifiedAt"):
                 if old["psal"].get(k) and not new.get("psal", {}).get(k):
                     new.setdefault("psal", {})[k] = old["psal"][k]
         # A 0-0 tie is a real score: test with "is not None", never truthiness.
-        if old.get("score") is not None and new.get("score") is None and new["status"] not in ("canceled", "postponed"):
+        if old.get("score") is not None and new.get("score") is None and new["status"] not in ("canceled", "postponed") \
+                and not (new.get("psal") or {}).get("scoreConflict"):
             new["score"], new["status"] = old["score"], "final"
         new.pop("missingRuns", None)
         if _comparable([old]) != _comparable([new]):
@@ -1503,8 +1760,15 @@ def pick_detail_targets(fresh: dict[str, dict], previous: dict, now: datetime,
     today = now.date()
     now_hm = now.strftime("%H:%M")
     prev = {g.get("id"): g for g in previous.get("games", [])}
-    recent, never, again = [], [], []
+    recent, never, again, verify = [], [], [], []
     for key, g in fresh.items():
+        ps_ = g.get("psal") or {}
+        if (g.get("score") is not None and ps_.get("scoreSource") == "team" and g.get("opponent")
+                and str(ps_.get("gameId") or "").isdigit()):
+            oldp = (prev.get(g["id"]) or {}).get("psal") or {}
+            if not oldp.get("verifiedAt") and not int(oldp.get("checks", 0) or 0):
+                verify.append(((g["date"], g.get("time") or ""), (ps_["sportCode"], ps_["gameId"], g.get("opponent"), g.get("sport"))))
+            continue
         if g["status"] in ("canceled", "postponed") or g.get("score") is not None or g.get("resultText"):
             continue
         if not g.get("opponent"):
@@ -1512,7 +1776,7 @@ def pick_detail_targets(fresh: dict[str, dict], previous: dict, now: datetime,
         if not str((g.get("psal") or {}).get("gameId") or "").isdigit():
             continue                          # no game page to check (team-schedule entry without a link)
         old = prev.get(g["id"]) or {}
-        if old.get("score") is not None or old.get("resultText"):
+        if (old.get("score") is not None or old.get("resultText")) and not ps_.get("scoreConflict"):
             continue                          # already have the final result
         d = date.fromisoformat(g["date"])
         if d > today or (d == today and (g.get("time") or "23:59") > now_hm):
@@ -1533,7 +1797,7 @@ def pick_detail_targets(fresh: dict[str, dict], previous: dict, now: datetime,
         item = ((g["date"], g.get("time") or ""), (g["psal"]["sportCode"], g["psal"]["gameId"], g.get("opponent"), g.get("sport")))
         (recent if age <= 2 else never if not last else again).append(item)
     ordered = []
-    for bucket in (recent, never, again):
+    for bucket in (recent, never, again, verify):   # verify = cross-check a team-schedule score once
         ordered += [t for _, t in sorted(bucket, key=lambda x: x[0], reverse=True)]
     return ordered[:limit]
 
@@ -1627,7 +1891,9 @@ def build_output(previous: dict, games: list[dict], now: datetime, sync_info: di
     })
     meta.setdefault("seasons", [])
     meta.setdefault("dayNotes", {})
-    return {"meta": meta, "games": games}
+    out = {"meta": meta, "games": games}
+    meta["dataHash"] = data_hash(out)
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -1694,6 +1960,10 @@ def discover_teams(fetcher: Fetcher, previous: dict, cal_teams: dict, now: datet
     return teams, events, fetched
 
 
+def school_year_start(today: date) -> date:
+    return date(today.year if today.month >= 8 else today.year - 1, 8, 1)
+
+
 def pick_team_codes(teams: dict, fresh: dict, previous: dict, now: datetime) -> list[str]:
     today = now.date()
     near = set()
@@ -1737,6 +2007,7 @@ def run_sync(args, fetcher: Fetcher | None = None, now: datetime | None = None) 
         pages, w = fetch_calendar(fetcher, today)
         warnings += w
         window = (month_bounds(*min(pages))[0], month_bounds(*max(pages))[1])
+        report["calendarMonths"] = {"read": len(pages), "expected": MONTHS_BACK + MONTHS_AHEAD + 1}
         cal_teams = {}
         for _ym, (_h, entries) in pages.items():
             for e in entries:
@@ -1752,7 +2023,8 @@ def run_sync(args, fetcher: Fetcher | None = None, now: datetime | None = None) 
         report["unclassified"] = unclassified
         validate(fresh, previous, window, today)
 
-        # 3. Cross-check: each team's FULL SCHEDULE
+        # 3. Cross-check: each team's FULL SCHEDULE (whole school year: late scores for older games still arrive here)
+        team_from = min(window[0], school_year_start(today))
         team_codes = pick_team_codes(teams, fresh, previous, now)
         schedules, w = fetch_team_schedules(fetcher, team_codes, DEBUG_DIR)
         warnings += w
@@ -1766,7 +2038,11 @@ def run_sync(args, fetcher: Fetcher | None = None, now: datetime | None = None) 
                 report["teamSchedulesUnreadable"].append(code)
                 continue
             entries, _skipped = parse_team_rows(rows, code, t, today)
-            entries = [e for e in entries if window[0].isoformat() <= e["date"] <= window[1].isoformat()]
+            entries = [e for e in entries if team_from.isoformat() <= e["date"] <= window[1].isoformat()]
+            for e in entries:
+                if e.get("idMismatch"):
+                    report["scoreConflicts"].append({"id": f"{e['code']}/{e['gid']}", "detail": "row game id differs from its link",
+                                                     "team": e.get("raw")})
             known_here = [g for g in fresh.values() if (g.get("psal") or {}).get("teamCode") == code]
             t.update({"readAt": stamp, "rows": len(rows), "games": len(entries), "gamesInWindow": len(entries), "readNow": True})
             if known_here and not entries:
@@ -1792,9 +2068,17 @@ def run_sync(args, fetcher: Fetcher | None = None, now: datetime | None = None) 
         sport_events = [e for e in sport_events if window[0].isoformat() <= e["date"] <= window[1].isoformat()]
         sport_added = combine(fresh, sport_events, "sportpage", report)
 
+        # Earlier unresolved conflicts stay flagged while the team schedule still shows the disputed score.
+        prev_by_id = {g.get("id"): g for g in previous.get("games", [])}
+        for g in fresh.values():
+            c = ((prev_by_id.get(g["id"]) or {}).get("psal") or {}).get("scoreConflict")
+            if c and g.get("score") in (c.get("team"), None):
+                flag_conflict(g, c.get("team"), c.get("detail"))
+
         # 5. Game pages: final scores
         targets = [] if args.no_details else pick_detail_targets(fresh, previous, now)
         details, w, _ = fetch_details(fetcher, targets, DEBUG_DIR)
+        report["detailNotLoaded"] = [f"{t[0]}/{t[1]}" for t in targets if f"{t[0]}/{t[1]}" not in details]
         warnings += w
         scores_found = 0
         prev_by_id = {g.get("id"): g for g in previous.get("games", [])}
@@ -1804,12 +2088,23 @@ def run_sync(args, fetcher: Fetcher | None = None, now: datetime | None = None) 
             g = by_key.get(key)
             if not g:
                 continue
-            if d.get("score") is not None and g.get("score") is not None and d["score"] != g["score"]:
-                report["scoreConflicts"].append({"id": g["id"], "detail": d["score"], "team": g["score"]})
-            apply_detail(g, d)
-            if d.get("score") is not None:
-                g["psal"]["scoreSource"] = "detail"
+            if d.get("gameId") and str(d["gameId"]) != str(g["psal"].get("gameId")):
+                report["scoreConflicts"].append({"id": g["id"], "detail": f"page is for game {d['gameId']}", "team": g.get("score")})
+                d = dict(d, score=None, scoreReason=f"page shows game {d['gameId']}, expected {g['psal'].get('gameId')}")
+            team_score = g.get("score") if g["psal"].get("scoreSource") == "team" else None
+            team_score = team_score or (g["psal"].get("scoreConflict") or {}).get("team")
+            if d.get("score") is not None and team_score is not None and d["score"] != team_score:
+                report["scoreConflicts"].append({"id": g["id"], "detail": d["score"], "team": team_score})
+                flag_conflict(g, team_score, d["score"])
+            elif d.get("score") is not None:
+                g["psal"].pop("scoreConflict", None)
+                if team_score is not None:
+                    g["psal"]["verifiedAt"] = stamp      # game page confirms the team-schedule score
+                apply_detail(g, d)
+                g["psal"]["scoreSource"] = "team+detail" if team_score is not None else "detail"
                 scores_found += 1
+            else:
+                apply_detail(g, d)
             prev_checks = int(((prev_by_id.get(g["id"]) or {}).get("psal") or {}).get("checks", 0) or 0)
             g["psal"]["checkedAt"] = stamp
             g["psal"]["checks"] = prev_checks + 1
@@ -1844,6 +2139,10 @@ def run_sync(args, fetcher: Fetcher | None = None, now: datetime | None = None) 
             "detailPagesChecked": len(details),
             "scoresFound": scores_found,
             "playedGamesStillWithoutScore": len(report["playedWithoutScore"]),
+            "scoresFromTeamSchedules": sum(1 for g in games if (g.get("psal") or {}).get("scoreSource") in ("team", "team+detail")),
+            "scoreConflicts": len(report["scoreConflicts"]),
+            "coverageComplete": report["coverage"]["complete"],
+            "coverageIssues": report["coverage"]["issues"],
             "requests": fetcher.requests_made,
             "lastFullRefresh": stamp if full else prev_sync.get("lastFullRefresh"),
             "lastDiscovery": stamp if discovered else prev_sync.get("lastDiscovery"),
@@ -1858,7 +2157,8 @@ def run_sync(args, fetcher: Fetcher | None = None, now: datetime | None = None) 
                  sync_info["gamesInWindow"], len(cal_entries), team_added, sport_added, summary)
         for w in warnings:
             log.warning(w)
-        gh_output(status="ok", changed=str(changed and not args.preview).lower())
+        gh_output(status="ok", changed=str(changed and not args.preview).lower(),
+                  datahash=result["meta"]["dataHash"], synced_at=result["meta"]["lastSynced"])
         gh_summary(summary_markdown(result, args.preview, detail_report))
         gh_summary(report_markdown(report, now))
         return EXIT_OK
@@ -2008,7 +2308,10 @@ def run_probe(args) -> int:
 def run_prepare(args) -> int:
     """Put the newest valid games.json in place (used before deploying site-only changes)."""
     data = best_previous([Path(args.data)] + [Path(p) for p in (args.previous or [])])
+    data["meta"]["dataHash"] = data_hash(data)
     write_json(Path(args.data), data)
+    gh_output(status="ok", changed="false", datahash=data["meta"]["dataHash"],
+              synced_at=data["meta"].get("lastSynced") or "")
     log.info("Prepared %s (source=%s, lastSynced=%s, %d games)", args.data, data["meta"].get("source"),
              data["meta"].get("lastSynced"), len(data["games"]))
     return EXIT_OK
@@ -2059,7 +2362,9 @@ def run_import_csv(args) -> int:
     meta.setdefault("seasons", [])
     meta.setdefault("dayNotes", {})
     games.sort(key=lambda g: (g["date"], g["time"] or "99:99"))
-    write_json(Path(args.data), {"meta": meta, "games": games})
+    out = {"meta": meta, "games": games}
+    meta["dataHash"] = data_hash(out)
+    write_json(Path(args.data), out)
     log.info("Imported %d games from %s", len(games), args.csv)
     return EXIT_OK
 
