@@ -82,6 +82,8 @@ OCT = {date(2026, 10, 20): [("TENNIS GIRLS VARSITY", "Vs. Stuyvesant High School
        date(2026, 9, 30): [("SOCCER BOYS VARSITY", "Vs. Lehman Campus @ Macombs Dam Park: Soccer-01", "012", "510001")]}
 DEC = {date(2026, 12, 2): NOV[date(2026, 12, 2)],
        date(2026, 12, 9): [("TABLE TENNIS BOYS VARSITY", "Vs. Adlai Stevenson Campus @ Bronx HS of Science - Table Tennis", "065", "513000")]}
+SEP = {date(2026, 9, 30): OCT[date(2026, 9, 30)],
+       date(2026, 9, 15): [("SOCCER GIRLS VARSITY", "Vs. Lehman Campus @ Macombs Dam Park: Soccer-01", "012", "509001")]}
 JAN = {date(2027, 1, 6): [("GYMNASTICS GIRLS VARSITY", "Vs. DeWitt Clinton High School @ Dewitt Clinton-Gym", "009", "514000")]}
 
 SPORT_PAGES = {
@@ -140,8 +142,8 @@ class FakeFetcher(ps.Fetcher):
     def __init__(self, robots="User-agent: *\nDisallow: /admin/\n", fail=None):
         super().__init__(delay=0, debug_dir=None)
         self.robots_txt, self.fail, self.log = robots, fail, []
-        self.months = {(2026, 10): OCT, (2026, 11): NOV, (2026, 12): DEC, (2027, 1): JAN}
-        self.args = {(2026, 10): ("V_P10", "V_N10"), (2026, 11): ("V_P11", "V_N11"),
+        self.months = {(2026, 9): SEP, (2026, 10): OCT, (2026, 11): NOV, (2026, 12): DEC, (2027, 1): JAN}
+        self.args = {(2026, 9): ("V_P9", "V_N9"), (2026, 10): ("V_P10", "V_N10"), (2026, 11): ("V_P11", "V_N11"),
                      (2026, 12): ("V_P12", "V_N12"), (2027, 1): ("V_P1", "V_N1")}
 
     def _page(self, ym):
@@ -177,10 +179,10 @@ class FakeFetcher(ps.Fetcher):
 
 def fake_details(fetcher, targets, debug_dir, capture_network=False):
     res = {}
-    for code, gid, opp in targets:
+    for code, gid, opp, sport in targets:
         t = DETAIL_TEXTS.get(f"{code}/{gid}")
         if t:
-            res[f"{code}/{gid}"] = ps.parse_detail_text(t, opp)
+            res[f"{code}/{gid}"] = ps.parse_detail_text(t, opp, sport)
     return res, [], []
 
 
@@ -321,6 +323,152 @@ class MergeTests(unittest.TestCase):
             self.assertEqual(ps.best_previous([Path(d, "c.json"), a])["games"], [1])
 
 
+def page(status, *body, sport_line="SOCCER GIRLS V", game="The Bronx High School of Science vs Stuyvesant"):
+    """A rendered game-detail page: labelled fields, then whatever results block PSAL shows."""
+    return "\n".join(["GAME/MEET RESULTS", "Sport", sport_line, "Game/Meet", game, "Status", status,
+                       "Date", "11/03/2026", "Time", "4:00 PM", "Address", "Harris Park: Soccer-01 map 2639",
+                       *body, "Referees", "Pat Smith", "©2021 PSAL"])
+
+
+class ScoreFormatTests(unittest.TestCase):
+    """Different sports / layouts PSAL may use. Each must give Bronx Science first."""
+
+    def sc(self, text, opp="Stuyvesant", sport="Soccer"):
+        return ps.parse_detail_text(text, opp, sport)["score"]
+
+    def test_A_name_and_score_rows(self):
+        self.assertEqual(self.sc(page("Final", "The Bronx High School of Science 3", "Stuyvesant High School 1")),
+                         {"bxsci": 3, "opponent": 1})
+
+    def test_A_tab_separated_table_rows(self):
+        self.assertEqual(self.sc(page("Final", "Stuyvesant High School\t2", "The Bronx High School of Science\t4")),
+                         {"bxsci": 4, "opponent": 2})
+
+    def test_B_name_and_score_on_separate_lines(self):
+        self.assertEqual(self.sc(page("Final", "The Bronx High School of Science", "1", "Stuyvesant High School", "2")),
+                         {"bxsci": 1, "opponent": 2})
+
+    def test_C_one_line_formats(self):
+        for line, want in [("Bronx Science 2 - 1 Stuyvesant", (2, 1)),
+                           ("Stuyvesant 1 - 2 Bronx Science", (2, 1)),
+                           ("Stuyvesant 3, Bronx HS of Science 0", (0, 3)),
+                           ("The Bronx High School of Science vs Stuyvesant: 5-4", (5, 4))]:
+            with self.subTest(line=line):
+                self.assertEqual(self.sc(page("Final", line)), {"bxsci": want[0], "opponent": want[1]})
+
+    def test_D_basketball_box_score_with_total(self):
+        t = page("Final", "Team 1 2 3 4 Total", "The Bronx High School of Science 10 12 8 15 45",
+                 "Lehman Campus 8 9 10 11 38", game="Lehman Campus vs The Bronx High School of Science")
+        self.assertEqual(self.sc(t, "Lehman Campus", "Basketball"), {"bxsci": 45, "opponent": 38})
+
+    def test_E_volleyball_sets_without_total(self):
+        t = page("Final", "Team Set 1 Set 2 Set 3 Set 4", "The Bronx High School of Science 25 23 25 25",
+                 "East Harlem Pride 20 25 18 21", sport_line="VOLLEYBALL GIRLS V")
+        self.assertEqual(self.sc(t, "East Harlem Pride", "Volleyball"), {"bxsci": 3, "opponent": 1})
+
+    def test_sets_are_not_summed_for_non_set_sports(self):
+        t = page("Final", "Set 1 Set 2", "The Bronx High School of Science 25 25", "Stuyvesant 20 18")
+        self.assertIsNone(self.sc(t, "Stuyvesant", "Soccer"))
+
+    def test_gymnastics_decimal_scores(self):
+        t = page("Final", "Team Score", "the bronx high school of science 110.00", "stuyvesant high school 98.35",
+                 sport_line="GYMNASTICS GIRLS V")
+        self.assertEqual(self.sc(t, "Stuyvesant", "Gymnastics"), {"bxsci": 110, "opponent": 98.35})
+
+    def test_swimming_and_tennis_style_totals(self):
+        self.assertEqual(self.sc(page("Final", "Bronx Science 54", "Hunter College HS 40"), "Hunter College", "Swimming"),
+                         {"bxsci": 54, "opponent": 40})
+        self.assertEqual(self.sc(page("Final", "Townsend Harris 1", "Bronx Science 4"), "Townsend Harris", "Tennis"),
+                         {"bxsci": 4, "opponent": 1})
+
+    def test_real_zero_zero_tie_when_final(self):
+        self.assertEqual(self.sc(page("Final", "The Bronx High School of Science 0", "Stuyvesant 0")),
+                         {"bxsci": 0, "opponent": 0})
+
+    def test_zero_zero_placeholder_is_not_a_result(self):
+        self.assertIsNone(self.sc(page("Scheduled", "The Bronx High School of Science 0", "Stuyvesant 0")))
+        self.assertIsNone(self.sc(page("", "The Bronx High School of Science 0", "Stuyvesant 0")))   # unknown status
+
+    def test_nonzero_score_with_missing_status_is_accepted(self):
+        self.assertEqual(self.sc(page("", "The Bronx High School of Science 2", "Stuyvesant 0")),
+                         {"bxsci": 2, "opponent": 0})
+
+    def test_postponed_or_scheduled_pages_never_give_scores(self):
+        for st in ("Postponed", "Cancelled", "Scheduled", "Not Played"):
+            with self.subTest(status=st):
+                self.assertIsNone(self.sc(page(st, "The Bronx High School of Science 3", "Stuyvesant 1")))
+
+    def test_conflicting_layouts_give_no_score(self):
+        t = page("Final", "The Bronx High School of Science 3", "Stuyvesant 1", "Bronx Science 2 - 1 Stuyvesant")
+        d = ps.parse_detail_text(t, "Stuyvesant", "Soccer")
+        self.assertIsNone(d["score"])
+        self.assertIn("conflicting", d["scoreReason"])
+
+    def test_abbreviated_opponent_names(self):
+        t = page("Final", "Bronx Science 61", "Bklyn Tech. 58", "Referee crew 3")
+        self.assertEqual(self.sc(t, "Brooklyn Technical", "Basketball"), {"bxsci": 61, "opponent": 58})
+
+    def test_venue_date_time_lines_are_never_scores(self):
+        t = page("Final", "Bronx HS Of Science - GYM 2", "11/03/2026 4:00 PM")
+        d = ps.parse_detail_text(t, "Stuyvesant", "Soccer")
+        self.assertIsNone(d["score"])
+        self.assertEqual(d["scoreReason"], "no score lines for both teams were found on the page")
+
+    def test_final_status_without_numbers_stays_unpublished(self):
+        g = {"status": "scheduled", "score": None, "time": None, "resultText": None}
+        ps.apply_detail(g, ps.parse_detail_text(page("Final"), "Stuyvesant", "Soccer"))
+        self.assertEqual((g["status"], g["score"]), ("scheduled", None))   # site shows "Awaiting result"
+
+
+class CoverageTests(unittest.TestCase):
+    NOW = datetime(2026, 11, 11, 10, 0, tzinfo=TZ)
+
+    def game(self, gid, d, t="16:00", **kw):
+        g = {"id": f"psal-012-{gid}", "date": d, "time": t, "sport": "Soccer", "gender": "Girls", "level": "Varsity",
+             "opponent": "Opp", "event": None, "homeAway": "home", "status": "scheduled", "score": None,
+             "resultText": None, "psal": {"sportCode": "012", "gameId": str(gid)}}
+        g.update(kw)
+        return g
+
+    def test_all_played_games_are_candidates_not_just_last_14_days(self):
+        fresh = {}
+        for i in range(70):   # Sept 2 .. Nov 10: 70 played games
+            d = (date(2026, 11, 10).toordinal() - i)
+            fresh[f"012/{i}"] = self.game(i, date.fromordinal(d).isoformat())
+        fresh["012/future"] = self.game("future", "2026-11-20")
+        fresh["012/today-later"] = self.game("today-later", "2026-11-11", "16:00")
+        fresh["012/meet"] = self.game("meet", "2026-11-01", opponent=None, event="City Championships")
+        t = ps.pick_detail_targets(fresh, {"games": []}, self.NOW, limit=1000)
+        gids = [x[1] for x in t]
+        self.assertEqual(len(gids), 70)
+        self.assertNotIn("future", gids)
+        self.assertNotIn("today-later", gids)
+        self.assertNotIn("meet", gids)
+        self.assertEqual(gids[0], "0")                       # newest first
+        self.assertEqual(len(ps.pick_detail_targets(fresh, {"games": []}, self.NOW, limit=60)), 60)
+
+    def test_games_with_results_are_skipped_including_ties(self):
+        fresh = {"012/1": self.game(1, "2026-11-01")}
+        prev = {"games": [self.game(1, "2026-11-01", status="final", score={"bxsci": 0, "opponent": 0})]}
+        self.assertEqual(ps.pick_detail_targets(fresh, prev, self.NOW), [])
+
+    def test_recheck_spacing_and_give_up(self):
+        fresh = {"012/1": self.game(1, "2026-10-22"), "012/2": self.game(2, "2026-09-20")}
+        prev = {"games": [
+            self.game(1, "2026-10-22", psal={"checkedAt": "2026-11-11T08:00:00-05:00", "checks": 2}),
+            self.game(2, "2026-09-20", psal={"checkedAt": "2026-11-09T08:00:00-05:00", "checks": 6})]}
+        self.assertEqual(ps.pick_detail_targets(fresh, prev, self.NOW), [])   # checked 2h ago; given up
+        prev["games"][0]["psal"]["checkedAt"] = "2026-11-10T08:00:00-05:00"     # 26h ago -> due again
+        self.assertEqual([x[1] for x in ps.pick_detail_targets(fresh, prev, self.NOW)], ["1"])
+
+    def test_zero_zero_result_is_never_erased_by_merge(self):
+        prev = {"meta": {"source": "psal"}, "games": [
+            self.game(1, "2026-11-01", status="final", score={"bxsci": 0, "opponent": 0})]}
+        games, _ = ps.merge(prev, {"012/1": self.game(1, "2026-11-01")}, (date(2026, 9, 1), date(2027, 1, 31)),
+                            date(2026, 11, 11))
+        self.assertEqual((games[0]["status"], games[0]["score"]), ("final", {"bxsci": 0, "opponent": 0}))
+
+
 class EndToEndTests(unittest.TestCase):
     NOW = datetime(2026, 11, 10, 23, 30, tzinfo=TZ)
 
@@ -341,7 +489,7 @@ class EndToEndTests(unittest.TestCase):
             self.assertNotIn("2026-11-11", out["meta"]["dayNotes"])         # sample notes removed
             ids = {g["id"] for g in out["games"]}
             self.assertFalse(any(not i.startswith("psal-") for i in ids))      # sample games removed
-            self.assertEqual(out["meta"]["sync"]["window"], ["2026-10-01", "2027-01-31"])
+            self.assertEqual(out["meta"]["sync"]["window"], ["2026-09-01", "2027-01-31"])
             by = {g["id"]: g for g in out["games"]}
             vb = by["psal-016-511884"]
             self.assertEqual((vb["time"], vb["homeAway"], vb["status"], vb["score"]),
@@ -352,7 +500,7 @@ class EndToEndTests(unittest.TestCase):
             self.assertEqual((soc["status"], soc["score"]), ("scheduled", None))  # ambiguous -> Awaiting Result
             self.assertIn("psal-009-514000", ids)                            # January reached via postbacks
             posts = [a for m, u, a in f.log if m == "POST"]
-            self.assertEqual(posts, ["V_P11", "V_N11", "V_N12"])
+            self.assertEqual(posts, ["V_P11", "V_P10", "V_N11", "V_N12"])
             # sorted chronologically
             keys = [(g["date"], g["time"] or "99:99") for g in out["games"]]
             self.assertEqual(keys, sorted(keys))
