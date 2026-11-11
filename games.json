@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "schemaVersion": 1,
+    "school": "Bronx High School of Science",
+    "source": "sample",
+    "lastSynced": "2026-11-10T23:08:00-05:00",
+    "notes": "SAMPLE DATA for testing the interface. These are NOT real PSAL schedules or results. Replace this file with real data (same format) before sharing the site.",
+    "seasons": [
+      { "name": "Fall season", "start": "2026-09-01", "end": "2026-11-30" },
+      { "name": "Winter season", "start": "2026-12-01", "end": "2027-02-28" },
+      { "name": "Spring season", "start": "2027-03-01", "end": "2027-06-30" }
+    ],
+    "dayNotes": {
+      "2026-11-03": "Election Day — schools closed for students",
+      "2026-11-11": "Veterans Day — schools closed",
+      "2026-11-26": "Thanksgiving — schools closed",
+      "2026-11-27": "Thanksgiving break — schools closed",
+      "2026-12-24": "Winter recess — schools closed",
+      "2026-12-25": "Winter recess — schools closed"
+    }
+  },
+  "games": [
+    { "id": "2026-10-20-gv-soc-lehman", "date": "2026-10-20", "time": "15:30", "sport": "Soccer", "gender": "Girls", "level": "Varsity", "opponent": "Lehman", "homeAway": "home", "location": "Macombs Dam Park", "status": "final", "score": { "bxsci": 5, "opponent": 0 } },
+    { "id": "2026-10-22-gv-vb-kennedy", "date": "2026-10-22", "time": "16:00", "sport": "Volleyball", "gender": "Girls", "level": "Varsity", "opponent": "Kennedy", "homeAway": "away", "location": "Kennedy Campus Gym", "status": "final", "score": { "bxsci": 3, "opponent": 0 } },
+    { "id": "2026-10-24-bv-xc-invite", "date": "2026-10-24", "time": "10:00", "sport": "Cross Country", "gender": "Boys", "level": "Varsity", "opponent": null, "event": "Bronx Invitational", "homeAway": "neutral", "location": "Van Cortlandt Park", "status": "final", "score": null, "resultText": "4th of 18" },
+    { "id": "2026-10-27-bv-soc-clinton", "date": "2026-10-27", "time": "16:00", "sport": "Soccer", "gender": "Boys", "level": "Varsity", "opponent": "DeWitt Clinton", "homeAway": "away", "location": "Clinton Field", "status": "final", "score": { "bxsci": 2, "opponent": 2 } },
+    { "id": "2026-10-29-gv-swim-townsend", "date": "2026-10-29", "time": "16:30", "sport": "Swimming", "gender": "Girls", "level": "Varsity", "opponent": "Townsend Harris", "homeAway": "home", "location": "Bronx Science Pool", "status": "final", "score": { "bxsci": 61, "opponent": 33 } },
+    { "id": "2026-10-30-gv-ten-hunter", "date": "2026-10-30", "time": "16:00", "sport": "Tennis", "gender": "Girls", "level": "Varsity", "opponent": "Hunter College HS", "homeAway": "home", "location": "Crotona Park Tennis Courts", "status": "final", "score": { "bxsci": 4, "opponent": 1 } },
+
+    { "id": "2026-11-02-gv-soc-rka", "date": "2026-11-02", "time": "15:30", "sport": "Soccer", "gender": "Girls", "level": "Varsity", "opponent": "Riverdale/Kingsbridge", "homeAway": "home", "location": "Macombs Dam Park", "status": "final", "score": { "bxsci": 3, "opponent": 0 } },
+    { "id": "2026-11-04-gv-vb-clinton", "date": "2026-11-04", "time": "16:00", "sport": "Volleyball", "gender": "Girls", "level": "Varsity", "opponent": "DeWitt Clinton", "homeAway": "home", "location": "Bronx Science Gym", "status": "final", "score": { "bxsci": 3, "opponent": 0 } },
+    { "id": "2026-11-04-bjv-soc-columbia", "date": "2026-11-04", "time": "16:00", "sport": "Soccer", "gender": "Boys", "level": "JV", "opponent": "Columbia Secondary", "homeAway": "away", "location": "Riverbank State Park", "status": "final", "score": { "bxsci": 1, "opponent": 3 } },
+    { "id": "2026-11-04-gv-swim-hunter", "date": "2026-11-04", "time": "16:30", "sport": "Swimming", "gender": "Girls", "level": "Varsity", "opponent": "Hunter College HS", "homeAway": "home", "location": "Bronx Science Pool", "status": "final", "score": { "bxsci": 54, "opponent": 40 } },
+    { "id": "2026-11-05-gjv-soc-rka", "date": "2026-11-05", "time": "16:00", "sport": "Soccer", "gender": "Girls", "level": "JV", "opponent": "Kingsbridge Intl", "homeAway": "away", "location": "Riverdale Park Field", "status": "final", "score": { "bxsci": 0, "opponent": 1 } },
+    { "id": "2026-11-06-bv-soc-kennedy", "date": "2026-11-06", "time": "15:00", "sport": "Soccer", "gender": "Boys", "level": "Varsity", "round": "Playoffs R1", "opponent": "Kennedy", "homeAway": "home", "location": "Macombs Dam Park", "status": "final", "score": { "bxsci": 4, "opponent": 1 } },
+
+    { "id": "2026-11-09-gv-vb-townsend", "date": "2026-11-09", "time": "16:00", "sport": "Volleyball", "gender": "Girls", "level": "Varsity", "opponent": "Townsend Harris", "homeAway": "home", "location": "Bronx Science Gym", "status": "final", "score": { "bxsci": 3, "opponent": 1 } },
+    { "id": "2026-11-09-gv-ten-beacon", "date": "2026-11-09", "time": "16:15", "sport": "Tennis", "gender": "Girls", "level": "Varsity", "opponent": "Beacon", "homeAway": "away", "location": "Central Park Tennis Center", "status": "final", "score": { "bxsci": 2, "opponent": 3 } },
+    { "id": "2026-11-10-gv-soc-stuy", "date": "2026-11-10", "time": "15:30", "sport": "Soccer", "gender": "Girls", "level": "Varsity", "opponent": "Stuyvesant", "homeAway": "home", "location": "Macombs Dam Park", "status": "final", "score": { "bxsci": 2, "opponent": 0 } },
+    { "id": "2026-11-10-bjv-soc-clinton", "date": "2026-11-10", "time": "16:00", "sport": "Soccer", "gender": "Boys", "level": "JV", "opponent": "DeWitt Clinton", "homeAway": "away", "location": "Clinton Field", "status": "scheduled", "score": null },
+    { "id": "2026-11-12-gjv-vb-hsas", "date": "2026-11-12", "time": "16:00", "sport": "Volleyball", "gender": "Girls", "level": "JV", "opponent": "American Studies at Lehman", "homeAway": "home", "location": "Bronx Science Gym", "status": "postponed", "score": null, "statusNote": "New date TBA" },
+    { "id": "2026-11-12-gv-swim-bktech", "date": "2026-11-12", "time": "16:30", "sport": "Swimming", "gender": "Girls", "level": "Varsity", "opponent": "Brooklyn Tech", "homeAway": "away", "location": "Brooklyn Tech Natatorium", "status": "scheduled", "score": null },
+    { "id": "2026-11-13-bv-soc-flewis", "date": "2026-11-13", "time": "15:00", "sport": "Soccer", "gender": "Boys", "level": "Varsity", "round": "Playoffs R2", "opponent": "Francis Lewis", "homeAway": "home", "location": "Macombs Dam Park", "status": "scheduled", "score": null },
+    { "id": "2026-11-14-gv-xc-boro", "date": "2026-11-14", "time": "09:30", "sport": "Cross Country", "gender": "Girls", "level": "Varsity", "opponent": null, "event": "Bronx Borough Championships", "homeAway": "neutral", "location": "Van Cortlandt Park", "status": "scheduled", "score": null },
+    { "id": "2026-11-14-bv-xc-boro", "date": "2026-11-14", "time": "10:15", "sport": "Cross Country", "gender": "Boys", "level": "Varsity", "opponent": null, "event": "Bronx Borough Championships", "homeAway": "neutral", "location": "Van Cortlandt Park", "status": "scheduled", "score": null },
+
+    { "id": "2026-11-17-gv-vb-stuy", "date": "2026-11-17", "time": "16:00", "sport": "Volleyball", "gender": "Girls", "level": "Varsity", "opponent": "Stuyvesant", "homeAway": "away", "location": "Stuyvesant HS Gym", "status": "scheduled", "score": null },
+    { "id": "2026-11-18-gjv-soc-lehman", "date": "2026-11-18", "time": "16:00", "sport": "Soccer", "gender": "Girls", "level": "JV", "opponent": "Lehman", "homeAway": "home", "location": "Macombs Dam Park", "status": "canceled", "score": null, "statusNote": "Field unavailable" },
+    { "id": "2026-11-19-gjv-vb-kennedy", "date": "2026-11-19", "time": "16:00", "sport": "Volleyball", "gender": "Girls", "level": "JV", "opponent": "Kennedy", "homeAway": "home", "location": "Bronx Science Gym", "status": "scheduled", "score": null },
+    { "id": "2026-11-19-gv-ten-townsend", "date": "2026-11-19", "time": "16:15", "sport": "Tennis", "gender": "Girls", "level": "Varsity", "opponent": "Townsend Harris", "homeAway": "home", "location": "Crotona Park Tennis Courts", "status": "scheduled", "score": null },
+    { "id": "2026-11-19-gv-swim-beacon", "date": "2026-11-19", "time": "16:30", "sport": "Swimming", "gender": "Girls", "level": "Varsity", "opponent": "Beacon", "homeAway": "home", "location": "Bronx Science Pool", "status": "scheduled", "score": null },
+    { "id": "2026-11-21-bv-xc-city", "date": "2026-11-21", "time": "09:00", "sport": "Cross Country", "gender": "Boys", "level": "Varsity", "opponent": null, "event": "PSAL City Championships", "homeAway": "neutral", "location": "Van Cortlandt Park", "status": "scheduled", "score": null },
+    { "id": "2026-11-21-gv-xc-city", "date": "2026-11-21", "time": "09:45", "sport": "Cross Country", "gender": "Girls", "level": "Varsity", "opponent": null, "event": "PSAL City Championships", "homeAway": "neutral", "location": "Van Cortlandt Park", "status": "scheduled", "score": null },
+    { "id": "2026-11-24-gv-vb-playoff", "date": "2026-11-24", "time": "16:00", "sport": "Volleyball", "gender": "Girls", "level": "Varsity", "round": "Playoffs R1", "opponent": "Midwood", "homeAway": "home", "location": "Bronx Science Gym", "status": "scheduled", "score": null },
+
+    { "id": "2026-12-01-gv-bb-lehman", "date": "2026-12-01", "time": "16:00", "sport": "Basketball", "gender": "Girls", "level": "Varsity", "opponent": "Lehman", "homeAway": "home", "location": "Bronx Science Gym", "status": "scheduled", "score": null },
+    { "id": "2026-12-02-bv-bb-kennedy", "date": "2026-12-02", "time": "16:00", "sport": "Basketball", "gender": "Boys", "level": "Varsity", "opponent": "Kennedy", "homeAway": "away", "location": "Kennedy Campus Gym", "status": "scheduled", "score": null },
+    { "id": "2026-12-03-gv-fence-stuy", "date": "2026-12-03", "time": "16:00", "sport": "Fencing", "gender": "Girls", "level": "Varsity", "opponent": "Stuyvesant", "homeAway": "away", "location": "Stuyvesant HS Gym", "status": "scheduled", "score": null },
+    { "id": "2026-12-04-bv-bowl-clinton", "date": "2026-12-04", "time": "15:30", "sport": "Bowling", "gender": "Boys", "level": "Varsity", "opponent": "DeWitt Clinton", "homeAway": "neutral", "location": "Bowling center (TBA)", "status": "scheduled", "score": null },
+    { "id": "2026-12-08-bjv-bb-clinton", "date": "2026-12-08", "time": "16:00", "sport": "Basketball", "gender": "Boys", "level": "JV", "opponent": "DeWitt Clinton", "homeAway": "home", "location": "Bronx Science Gym", "status": "scheduled", "score": null },
+    { "id": "2026-12-10-gv-bb-columbus", "date": "2026-12-10", "time": "16:00", "sport": "Basketball", "gender": "Girls", "level": "Varsity", "opponent": "Columbus", "homeAway": "away", "location": "Columbus Campus Gym", "status": "scheduled", "score": null },
+    { "id": "2026-12-11-bv-fence-bktech", "date": "2026-12-11", "time": "16:00", "sport": "Fencing", "gender": "Boys", "level": "Varsity", "opponent": "Brooklyn Tech", "homeAway": "home", "location": "Bronx Science Gym", "status": "scheduled", "score": null },
+    { "id": "2026-12-15-gv-bb-tbd", "date": "2026-12-15", "time": null, "sport": "Basketball", "gender": "Girls", "level": "Varsity", "opponent": "Walton", "homeAway": "away", "location": "Walton Campus Gym", "status": "scheduled", "score": null }
+  ]
+}

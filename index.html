@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BXSCI Athletics — Bronx Science games, all in one place</title>
+  <meta name="description" content="An independent, student-made schedule and results site for Bronx High School of Science PSAL teams.">
+  <meta name="theme-color" content="#FAF7F0">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='20' fill='%231F4D3A'/%3E%3Ctext x='50%25' y='54%25' text-anchor='middle' dominant-baseline='middle' font-family='Arial' font-weight='800' font-size='28' fill='white'%3Ebx%3C/text%3E%3C/svg%3E">
+
+  <!-- Fonts (free, Google Fonts) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ===== Icon sprite (used with <svg><use href="#id"/></svg>) ===== -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M16 2.5v4M8 2.5v4M3.5 10h17"/></symbol>
+    <symbol id="i-chev-l" viewBox="0 0 24 24"><path d="m14.5 18-6-6 6-6"/></symbol>
+    <symbol id="i-chev-r" viewBox="0 0 24 24"><path d="m9.5 18 6-6-6-6"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 10h17M9.5 10v10.5M14.5 10v10.5M3.5 15.2h17"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1L20.5 8.5"/><path d="M20.5 3.5v5h-5"/></symbol>
+    <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v11.5h13V9"/></symbol>
+    <symbol id="i-away" viewBox="0 0 24 24"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></symbol>
+    <symbol id="i-neutral" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-hourglass" viewBox="0 0 24 24"><path d="M6 2.5h12M6 21.5h12M7.5 2.5c0 5 9 6 9 9.5s-9 4.5-9 9.5M16.5 2.5c0 5-9 6-9 9.5s9 4.5 9 9.5"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M10 9v6M14 9v6"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="m9 9 6 6M15 9l-6 6"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></symbol>
+    <!-- Sport icons -->
+    <symbol id="s-soccer" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m12 8.2 3.4 2.4-1.3 3.9H9.9l-1.3-3.9Z"/><path d="M12 3v5.2M15.4 10.6l4.9-1.5M14.1 14.5l2.9 4.2M9.9 14.5 7 18.7M8.6 10.6 3.7 9.1"/></symbol>
+    <symbol id="s-volleyball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 12c0-4 1.5-7 4-8.6M12 12c3.5 2 6.8 2.2 9 1.2M12 12c-3.4 2-5.4 4.8-5.8 7.7"/></symbol>
+    <symbol id="s-swim" viewBox="0 0 24 24"><path d="M2 7c2 0 2-1.5 4-1.5S8 7 10 7s2-1.5 4-1.5S16 7 18 7s2-1.5 4-1.5"/><path d="M2 12.5c2 0 2-1.5 4-1.5s2 1.5 4 1.5 2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5"/><path d="M2 18c2 0 2-1.5 4-1.5S8 18 10 18s2-1.5 4-1.5S16 18 18 18s2-1.5 4-1.5"/></symbol>
+    <symbol id="s-flag" viewBox="0 0 24 24"><path d="M5 21.5V3.5"/><path d="M5 4h12.5l-2.5 4 2.5 4H5"/></symbol>
+    <symbol id="s-tennis" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M6 5.3c2.6 3.6 2.6 9.8 0 13.4M18 5.3c-2.6 3.6-2.6 9.8 0 13.4"/></symbol>
+    <symbol id="s-basketball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3v18M5.7 5.7a9 9 0 0 1 0 12.6M18.3 5.7a9 9 0 0 0 0 12.6"/></symbol>
+    <symbol id="s-fencing" viewBox="0 0 24 24"><path d="M4 4l16 16M20 4 4 20M2.5 7.5l5-5M16.5 21.5l5-5M21.5 7.5l-5-5M7.5 21.5l-5-5"/></symbol>
+    <symbol id="s-bowling" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="9.5" cy="8.5" r=".9"/><circle cx="13.2" cy="7.6" r=".9"/><circle cx="12.2" cy="11.2" r=".9"/></symbol>
+    <symbol id="s-generic" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></symbol>
+  </svg>
+
+  <!-- ===== Navigation ===== -->
+  <header class="nav" id="top">
+    <div class="nav-inner container">
+      <a class="logo" href="#top" aria-label="BXSCI Athletics home">
+        <span class="logo-mark">bx</span>
+        <span class="wordmark"><b>BXSCI</b><em>Athletics</em></span>
+      </a>
+
+      <nav class="links" aria-label="Main">
+        <a href="#schedule" class="link is-active" data-link="schedule">Schedule</a>
+        <a href="#results" class="link" data-link="results">Results</a>
+      </nav>
+
+      <div class="nav-right">
+        <button class="sync" id="syncBtn" type="button" aria-label="Reload schedule data">
+          <span class="sync-dot" id="syncDot"></span>
+          <span class="sync-long" id="syncText">Loading…</span>
+          <span class="sync-short" id="syncShort">…</span>
+          <svg class="i"><use href="#i-refresh"/></svg>
+        </button>
+        <button class="icon-btn menu-btn" id="menuBtn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="menuSheet">
+          <svg class="i"><use href="#i-menu"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile menu -->
+    <div class="menu-sheet" id="menuSheet" hidden>
+      <a href="#schedule" data-link="schedule">Schedule</a>
+      <a href="#results" data-link="results">Results</a>
+      <p class="menu-meta" id="menuMeta"></p>
+    </div>
+  </header>
+
+  <main>
+    <!-- ===== Header / hero ===== -->
+    <section class="hero container">
+      <div class="hero-copy">
+        <span class="chip-eyebrow">
+          <svg class="i"><use href="#i-cal"/></svg>
+          <span id="heroRange">Loading schedule…</span>
+        </span>
+        <h1>Your games,<br><em>all in one place</em>.</h1>
+        <p class="sub">A simpler way to keep up with Bronx Science sports.</p>
+      </div>
+      <div class="next-wrap" id="nextUp" aria-live="polite"></div>
+    </section>
+
+    <!-- ===== Schedule ===== -->
+    <section class="schedule container" id="schedule" aria-label="Schedule">
+      <div class="controls">
+        <div class="toolbar">
+          <div class="date-nav">
+            <button class="circle-btn nav-prev" id="prevBtn" type="button" aria-label="Previous week">
+              <svg class="i"><use href="#i-chev-l"/></svg>
+            </button>
+            <button class="circle-btn nav-next" id="nextBtn" type="button" aria-label="Next week">
+              <svg class="i"><use href="#i-chev-r"/></svg>
+            </button>
+            <div class="range">
+              <span class="overline">Schedule</span>
+              <h2 id="rangeLabel">—</h2>
+            </div>
+            <button class="today-btn" id="todayBtn" type="button">Today</button>
+          </div>
+
+          <div class="view-controls">
+            <div class="seg seg-view" role="group" aria-label="Time range">
+              <button class="seg-opt" type="button" data-view="week">Week</button>
+              <button class="seg-opt" type="button" data-view="month">Month</button>
+            </div>
+            <div class="seg seg-layout" role="group" aria-label="Layout">
+              <button class="seg-opt" type="button" data-layout="list" aria-label="List view">
+                <svg class="i"><use href="#i-list"/></svg><span>List</span>
+              </button>
+              <button class="seg-opt" type="button" data-layout="calendar" aria-label="Calendar view">
+                <svg class="i"><use href="#i-grid"/></svg><span>Calendar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="filters">
+          <div class="sport-filter">
+            <span class="filter-label"><svg class="i"><use href="#i-filter"/></svg>Sport</span>
+            <div class="chips" id="sportChips" role="group" aria-label="Filter by sport"></div>
+          </div>
+
+          <div class="filter-row">
+            <div class="seg seg-sm" role="group" aria-label="Filter by team">
+              <button class="seg-opt" type="button" data-filter="gender" data-value="all">All teams</button>
+              <button class="seg-opt" type="button" data-filter="gender" data-value="Boys">Boys</button>
+              <button class="seg-opt" type="button" data-filter="gender" data-value="Girls">Girls</button>
+            </div>
+            <div class="seg seg-sm" role="group" aria-label="Filter by level">
+              <button class="seg-opt" type="button" data-filter="level" data-value="all">All levels</button>
+              <button class="seg-opt" type="button" data-filter="level" data-value="Varsity">Varsity</button>
+              <button class="seg-opt" type="button" data-filter="level" data-value="JV">JV</button>
+            </div>
+            <button class="clear-btn" id="clearBtn" type="button" hidden>Clear filters</button>
+            <div class="seg seg-sm seg-ha" role="group" aria-label="Filter by home or away">
+              <button class="seg-opt" type="button" data-filter="ha" data-value="all">All games</button>
+              <button class="seg-opt" type="button" data-filter="ha" data-value="home">Home</button>
+              <button class="seg-opt" type="button" data-filter="ha" data-value="away">Away</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="schedule-body" id="scheduleBody" aria-live="polite"></div>
+
+      <div class="schedule-foot">
+        <div class="legend">
+          <span><i class="lg-dot lg-win"></i>Win</span>
+          <span><i class="lg-dot lg-loss"></i>Loss</span>
+          <span><i class="lg-dot lg-tie"></i>Tie</span>
+          <span><i class="lg-dot lg-wait"></i>Awaiting result</span>
+          <span><i class="lg-dot lg-up"></i>Upcoming</span>
+        </div>
+        <span class="count-text" id="countText"></span>
+      </div>
+    </section>
+
+    <!-- ===== Results ===== -->
+    <section class="results container" id="results" aria-label="Recent results">
+      <div class="results-head">
+        <div>
+          <h2>Recent results</h2>
+          <p>Final scores, posted as soon as PSAL publishes them.</p>
+        </div>
+        <button class="pill-btn" id="resultsToggle" type="button">
+          <span>All results</span><svg class="i"><use href="#i-arrow"/></svg>
+        </button>
+      </div>
+      <div class="results-grid" id="resultsGrid"></div>
+    </section>
+  </main>
+
+  <!-- ===== Footer ===== -->
+  <footer class="footer container">
+    <div class="foot-about">
+      <span class="wordmark wordmark-sm"><b>BXSCI</b><em>Athletics</em></span>
+      <p>An independent student project — not affiliated with the PSAL or NYC Public Schools.</p>
+      <p id="footNote">Scores are shown as Bronx Science first. All times are Eastern Time.</p>
+    </div>
+    <div class="foot-sync">
+      <svg class="i"><use href="#i-refresh"/></svg>
+      <span id="footSync">Last updated —</span>
+    </div>
+  </footer>
+
+  <!-- Data layer first, then the UI -->
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

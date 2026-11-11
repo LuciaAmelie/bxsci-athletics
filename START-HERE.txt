@@ -1,0 +1,88 @@
+BXSCI ATHLETICS — WHAT TO PUT ON GITHUB
+=======================================
+
+Unzip this file. Everything inside goes into your GitHub repository,
+with the same folder structure:
+
+  index.html            <- the website
+  style.css             <- the design
+  script.js             <- calendar + filters
+  data.js               <- loads the schedule data
+  games.json            <- schedule data (sample until the PSAL sync runs)
+  README.md             <- full instructions
+  START-HERE.txt        <- this file
+  sync/
+    psal_sync.py        <- the PSAL sync script
+    test_psal_sync.py   <- tests
+    requirements.txt    <- Python packages the sync needs
+  workflow-file/
+    psal-sync.yml       <- runs the sync every 30 min + publishes the site.
+                           On GitHub it must live at .github/workflows/psal-sync.yml
+                           (Step 4 shows exactly how). Do NOT upload this
+                           "workflow-file" folder itself.
+
+(There is also a hidden ".github" folder with the same file. Mac and Windows
+ hide it, and some downloads drop it. That's fine: Step 4 uses the visible copy.)
+
+
+STEP 1 — Create the repository
+------------------------------
+github.com -> "+" (top right) -> New repository
+  Name: bxsci-athletics
+  Visibility: Public
+  -> Create repository
+
+
+STEP 2 — Upload the files
+-------------------------
+1. On the new repo page click "uploading an existing file".
+2. Drag in all the files AND the "sync" folder from the unzipped folder.
+   (Skip the "workflow-file" folder; that one goes in Step 4.)
+3. Click "Commit changes".
+
+
+STEP 3 — Turn on GitHub Pages
+-----------------------------
+Settings -> Pages -> "Build and deployment" -> Source: GitHub Actions
+(No need to click anything else on that page.)
+
+
+STEP 4 — Add the workflow file (this also publishes the site)
+-------------------------------------------------------------
+1. Go back to the repo's Code tab -> Add file -> Create new file.
+2. In the file name box type exactly:   .github/workflows/psal-sync.yml
+   (each "/" automatically makes a folder)
+3. Open workflow-file/psal-sync.yml from the unzipped folder in TextEdit,
+   Notepad or VS Code. Select all, copy, and paste into the big box on GitHub.
+4. Click "Commit changes".
+5. Open the Actions tab. A run named "PSAL sync & deploy" starts by itself.
+   When it gets a green check (~1-2 min), your site is live at:
+       https://YOUR-USERNAME.github.io/bxsci-athletics/
+   (It shows "Sample data" for now. That's expected.)
+
+Check: the repo now shows index.html, style.css, script.js, data.js,
+games.json, README.md, START-HERE.txt and the folders "sync" and ".github".
+Click .github -> workflows: psal-sync.yml should be inside.
+
+
+STEP 5 — Run the probe (one-time check of PSAL; doesn't change your site)
+------------------------------------------------------------------------
+1. Actions tab -> "PSAL sync & deploy" (left) -> "Run workflow" (right side)
+2. Pick "probe" -> green "Run workflow".
+3. Wait ~3-5 minutes for the green check, then click the run.
+4. Read the report on that page, and download "psal-probe-..." under
+   "Artifacts" at the bottom.
+5. Send that download (or a screenshot of the report) to Claude.
+
+
+LATER — Turn on automatic updates (once the probe and preview look right)
+------------------------------------------------------------------------
+Settings -> Secrets and variables -> Actions -> "Variables" tab ->
+New repository variable
+   Name:  PSAL_SYNC_ENABLED
+   Value: true
+
+From then on it syncs about every 30 minutes and the site says
+"Synced with PSAL · N min ago". Until then it says "Sample data".
+
+More detail on everything: README.md
