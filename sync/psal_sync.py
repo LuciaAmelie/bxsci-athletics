@@ -1047,8 +1047,8 @@ TEAM_ROWS_JS = r"""() => {
 }"""
 
 
-TEAM_HEADING_RE = re.compile(r"^([A-Z][A-Z &/.'\-]{2,30}?)\s+(BOYS|GIRLS|COED|MIXED)\s+"
-                             r"(VARSITY|JV|JR\.? VARSITY|JUNIOR VARSITY|F/S.*|FROSH.*)$")
+TEAM_HEADING_RE = re.compile(r"^([A-Z][A-Z &/.'\-]{2,30}?)\s+(BOYS|GIRLS|COED|MIXED)"
+                             r"(?:\s+(VARSITY|JV|JR\.? VARSITY|JUNIOR VARSITY|F/S.*|FROSH.*))?$")
 
 
 def team_heading(text: str) -> str | None:
@@ -1223,6 +1223,54 @@ def parse_score_row(cells: list[str], links: list[str], code: str, info: dict, t
     }
 
 
+MEET_CELL_RE = re.compile(r"^MEET:\s*(\d+)#?\s+(\d{1,2}/\d{1,2}/\d{4})\s+(.+?)\s+(\d{1,2}:\d{2}\s*[AP]M)\s*$", re.I)
+TIGHT_HYPHEN_RE = re.compile(r"(?<=\S)-(?=\S)")
+MEET_STATUS_RE = re.compile(r"\s*-\s*(CANCEL+ED|POSTPONED|RESCHEDULED)\s*$", re.I)
+
+
+def parse_meet_row(cells: list[str], links: list[str], code: str, info: dict) -> dict | None:
+    """
+    Meets (cross country, track, gymnastics...) have no single opponent. Real PSAL formats:
+        09/15/2026 | Grand Prix #1 - Bronx/Manhattan-Van Cortlandt Park - Track & Field | 04:15 PM
+        MEET:9986# 02/04/2027 Tottenville HS-Gym 2 03:30 PM
+    The meet name and the venue are joined by a hyphen with no spaces ("Manhattan-Van Cortlandt").
+    """
+    link = next((GAME_HREF_RE.search(h) for h in links if GAME_HREF_RE.search(h or "")), None)
+    m = MEET_CELL_RE.match(cells[0]) if len(cells) <= 3 else None
+    if m:
+        mo, dd, yy = (int(x) for x in m.group(2).split("/"))
+        name, location, when, gid = "Meet", norm(m.group(3)), m.group(4), (link.group(2) if link else m.group(1))
+    elif (len(cells) >= 2 and re.fullmatch(r"\d{1,2}/\d{1,2}/\d{4}", cells[0]) and not BXS_RE.search(cells[1])
+          and not re.search(r"\bvs\.?\b|^@|\s@\s", cells[1], re.I) and len(re.findall(r"[A-Za-z]", cells[1])) >= 4
+          and all(re.match(r"^\d{1,2}:\d{2}", c) or not c for c in cells[2:3])):
+        mo, dd, yy = (int(x) for x in cells[0].split("/"))
+        text = cells[1]
+        cuts = list(TIGHT_HYPHEN_RE.finditer(text))
+        if cuts:
+            name, location = norm(text[:cuts[-1].start()]), norm(text[cuts[-1].end():])
+        else:
+            name, location = norm(text), None
+        when, gid = (cells[2] if len(cells) > 2 else ""), (link.group(2) if link else None)
+    else:
+        return None
+    try:
+        d = date(yy, mo, dd)
+    except ValueError:
+        return None
+    status_words = None
+    sm = MEET_STATUS_RE.search(name)
+    if sm:
+        status_words, name = sm.group(1).lower(), norm(name[:sm.start()])
+    return {
+        "code": link.group(1) if link else code, "gid": gid, "teamCode": code, "date": d.isoformat(),
+        "time": parse_time(when), "opponent": None, "event": name or "Meet",
+        "homeAway": "home" if is_home_venue(location) else "neutral", "location": location,
+        "result": None, "forfeit": None, "statusWords": status_words, "round": playoff_label(name),
+        "sport": info.get("sport"), "gender": info.get("gender"), "level": info.get("level"),
+        "raw": " | ".join(cells)[:200],
+    }
+
+
 def parse_team_rows(rows: list[dict], code: str, info: dict, today: date) -> tuple[list[dict], int]:
     """Turn rendered FULL SCHEDULE rows into game entries. Returns (entries, rows skipped)."""
     entries: list[dict] = []
@@ -1238,6 +1286,8 @@ def parse_team_rows(rows: list[dict], code: str, info: dict, today: date) -> tup
             skipped += 1          # a wrapper row holding the whole table's text, not one game
             continue
         structured = parse_score_row(cells, r.get("links", []), code, info, today)
+        if structured is None:
+            structured = parse_meet_row(cells, r.get("links", []), code, info)
         if structured is not None:
             if structured.get("skip"):
                 skipped += 1
@@ -1360,6 +1410,8 @@ def enrich(g: dict, e: dict, source: str) -> None:
         ps_["_sportPage"] = True          # authoritative home/away (see merge)
     if e.get("opponent") and not g.get("opponent"):
         g["opponent"], g["event"] = e["opponent"], None
+    elif e.get("event") and not g.get("opponent") and (not g.get("event") or g.get("event") == "Meet"):
+        g["event"] = e["event"]
     if e.get("location") and g.get("location") in (None, "", "Location TBA"):
         g["location"] = e["location"]
     if e.get("round") and not g.get("round"):
@@ -1468,7 +1520,7 @@ def completeness(report: dict, cal_entries: dict[str, dict], fresh: dict[str, di
         else:
             why = "not checked yet — queued for the next run (per-run page limit)"
         report["playedWithoutScore"].append({"id": g["id"], "date": g["date"], "team": f"{g['gender']} {g['level']} {g['sport']}",
-                                             "opponent": g.get("opponent"), "reason": why})
+                                             "opponent": g.get("opponent") or g.get("event"), "reason": why})
 
     # ---- Summary, per-week table and an honest coverage verdict ----
     def played(g):
