@@ -47,7 +47,7 @@ jobs:
   sync:
     if: github.event_name != 'schedule' || vars.PSAL_SYNC_ENABLED == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
     outputs:
       deploy: ${{ steps.build.outputs.deploy }}
     steps:
@@ -75,7 +75,7 @@ jobs:
 
       - name: Install headless Chromium (reads score pages)
         if: steps.mode.outputs.mode != 'prepare'
-        run: python -m playwright install chromium
+        run: python -m playwright install --with-deps chromium
 
       - name: Find the published site
         id: pages
@@ -103,6 +103,15 @@ jobs:
             probe)   python sync/psal_sync.py probe ;;
             prepare) python sync/psal_sync.py prepare --data games.json --previous live-games.json ;;
           esac
+
+      - name: Save completeness report
+        if: always() && (steps.mode.outputs.mode == 'sync' || steps.mode.outputs.mode == 'preview')
+        uses: actions/upload-artifact@v7
+        with:
+          name: psal-completeness-${{ github.run_id }}
+          path: sync/report/
+          retention-days: 14
+          if-no-files-found: ignore
 
       - name: Save preview / debug pages
         if: always() && (steps.mode.outputs.mode == 'probe' || steps.mode.outputs.mode == 'preview' || steps.run.outputs.status == 'error' || steps.run.outcome == 'failure')
@@ -150,4 +159,14 @@ jobs:
         with:
           path: _site
 
-  
+  deploy:
+    needs: sync
+    if: needs.sync.outputs.deploy == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
