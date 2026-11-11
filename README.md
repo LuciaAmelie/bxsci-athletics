@@ -112,10 +112,23 @@ then be fitted to PSAL's real markup.
   late, sometimes 10–30+ minutes, and occasionally skips one. The site shows the actual time of the
   last **successful** sync. The dot turns gray if that time is more than 2 hours ago.
 - **What's collected each run:**
-  - the calendar for last month, this month and the next two months
+  - the calendar for the two previous months, this month and the next two months
   - sport pages for games in the next week, plus all sports in the window every 6 hours
-  - game pages for recent games that still have no score: up to 20 per run, recent games first,
-    older ones checked less often
+  - game pages for **every played game that still has no score**, up to 60 per run
+    (`SYNC_MAX_DETAIL_PAGES`): the last 2 days first, then never-checked games (newest first),
+    then re-checks. Re-checks are spaced out by age: every run, hourly, every 6 hours, then daily.
+    A game more than 30 days old that still has no score after 6 checks is left alone.
+  - each run's summary has a "Game pages checked" table explaining every score found or missed
+- **Scores:** the sync reads these layouts:
+  - team name and score on one line, as rows or tables
+  - name and score on separate lines
+  - "A 3 - 1 B" on one line
+  - box scores with a Total column
+  - sets for volleyball, tennis and similar sports
+  - decimal scores like gymnastics
+
+  Bronx Science is always first, and the other team must match the scheduled opponent. A 0–0 counts
+  as a tie only when PSAL marks the game final. Otherwise the game shows "Awaiting result".
 - **History:** games outside the checked window, and all past results, are kept.
 - **Changes:**
   - A game with a new date gets a note: "Rescheduled from Nov 12".
