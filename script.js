@@ -147,6 +147,35 @@
     return state.data.games.filter(g => g.date >= start && g.date <= end);
   }
 
+  /* Sports offered as filters = every sport whose ACTUAL season overlaps the visible week/month.
+     A team's season is its first → last game in that school year (Aug–Jul), taken from the
+     collected PSAL schedules, plus a few days on each side for the transition between seasons.
+     So a sport stays available all season even in a week with no games, and overlapping
+     seasons (fall playoffs + early winter games) both show. No fixed calendar dates are used. */
+  const SEASON_PAD_DAYS = 7;
+  let seasonCache = { games: null, spans: [] };
+  function teamSeasons() {
+    const games = state.data.games;
+    if (seasonCache.games === games) return seasonCache.spans;
+    const spans = new Map();
+    for (const g of games) {
+      const { y, m } = parts(g.date);
+      const key = [g.sport, g.gender, g.level, m >= 8 ? y : y - 1].join('|');
+      const s = spans.get(key);
+      if (!s) spans.set(key, { sport: g.sport, first: g.date, last: g.date });
+      else { if (g.date < s.first) s.first = g.date; if (g.date > s.last) s.last = g.date; }
+    }
+    seasonCache = { games, spans: [...spans.values()] };
+    return seasonCache.spans;
+  }
+  function sportsInSeason(start, end) {
+    const out = new Set();
+    for (const s of teamSeasons()) {
+      if (addDays(s.first, -SEASON_PAD_DAYS) <= end && addDays(s.last, SEASON_PAD_DAYS) >= start) out.add(s.sport);
+    }
+    return out;
+  }
+
   function visibleRange() {
     if (state.view === 'week') {
       const start = startOfWeek(state.selected);
@@ -267,9 +296,11 @@
     document.querySelectorAll('[data-filter]').forEach(b => b.setAttribute('aria-pressed', String(state.filters[b.dataset.filter] === b.dataset.value)));
     $('clearBtn').hidden = !filtersActive();
 
-    // Sport chips reflect the sports that appear in the visible week/month.
+    // Sport chips: every sport in season during the visible week/month (see sportsInSeason).
+    // Sports with no game in this exact week stay available, just dimmed.
     if (state.data) {
-      const sports = new Set(gamesBetween(start, end).map(g => g.sport));
+      const sports = sportsInSeason(start, end);
+      gamesBetween(start, end).forEach(g => sports.add(g.sport));
       if (state.filters.sport !== 'all') sports.add(state.filters.sport);
       const list = [...sports].sort((a, b) => sportRank(a) - sportRank(b) || a.localeCompare(b));
       const inRange = new Set(gamesBetween(start, end).map(g => g.sport));
@@ -399,8 +430,13 @@
   function bigEmptyHTML(rangeEnd) {
     const unit = state.view === 'week' ? 'week' : 'month';
     const nextGame = state.data.games.find(g => g.date > rangeEnd && matchesFilters(g, state.filters));
-    const title = filtersActive() ? 'No games match your filters' : `No games this ${unit}`;
-    const text = filtersActive()
+    const onlySport = state.filters.sport !== 'all'
+      && Object.entries(state.filters).every(([k, v]) => k === 'sport' || v === 'all');
+    const title = onlySport ? `No games scheduled this ${unit}`
+      : filtersActive() ? 'No games match your filters' : `No games this ${unit}`;
+    const text = onlySport
+      ? `${state.filters.sport} has no Bronx Science games scheduled this ${unit}.${nextGame ? ' Jump to its next game below.' : ''}`
+      : filtersActive()
       ? `Nothing on the schedule for these filters this ${unit}. Try widening them or jump ahead.`
       : `Nothing on the Bronx Science schedule for these dates — a good ${unit} to rest up.`;
     const actions = [
