@@ -296,18 +296,16 @@
     document.querySelectorAll('[data-filter]').forEach(b => b.setAttribute('aria-pressed', String(state.filters[b.dataset.filter] === b.dataset.value)));
     $('clearBtn').hidden = !filtersActive();
 
-    // Sport chips: every sport in season during the visible week/month (see sportsInSeason).
-    // Sports with no game in this exact week stay available, just dimmed.
+    // Sport chips: every sport in season during the visible week/month (see sportsInSeason),
+    // all fully clickable — a sport with no game in this exact week is NOT grayed out.
     if (state.data) {
       const sports = sportsInSeason(start, end);
       gamesBetween(start, end).forEach(g => sports.add(g.sport));
       if (state.filters.sport !== 'all') sports.add(state.filters.sport);
       const list = [...sports].sort((a, b) => sportRank(a) - sportRank(b) || a.localeCompare(b));
-      const inRange = new Set(gamesBetween(start, end).map(g => g.sport));
       $('sportChips').innerHTML = ['all', ...list].map(s => {
         const pressed = state.filters.sport === s;
-        const dim = s !== 'all' && !inRange.has(s) ? ' is-dim' : '';
-        return `<button class="chip${dim}" type="button" data-sport="${esc(s)}" aria-pressed="${pressed}">${s === 'all' ? 'All sports' : esc(s)}</button>`;
+        return `<button class="chip" type="button" data-sport="${esc(s)}" aria-pressed="${pressed}">${s === 'all' ? 'All sports' : esc(s)}</button>`;
       }).join('');
     }
   }
