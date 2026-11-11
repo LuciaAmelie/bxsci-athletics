@@ -1,0 +1,196 @@
+# ------------------------------------------------------------------
+# BXSCI Athletics — PSAL sync (every 30 minutes)
+#
+# Hosting stays exactly as you set it up: Vercel is connected to this GitHub
+# repo and deploys every commit to main. This workflow only commits games.json
+# when the games/scores visitors see actually changed, so Vercel redeploys
+# only then. Checks with no changes make no commit and no deployment.
+#
+#  • schedule: runs only after you set the repository variable
+#      PSAL_SYNC_ENABLED = true  (Settings → Secrets and variables → Actions → Variables).
+#  • Run workflow (manual):
+#      preview → collect from PSAL, show a table + completeness report, commit NOTHING
+#      sync    → same as the scheduled run
+#      probe   → save raw PSAL pages as a downloadable artifact (for debugging)
+#
+# Vercel Hobby only deploys commits whose author is YOU, so the data commit is
+# authored as the repository owner (not github-actions[bot]).
+# ------------------------------------------------------------------
+name: PSAL sync
+
+on:
+  schedule:
+    # Every 30 minutes, offset from :00/:30 because GitHub delays jobs that start on the hour.
+    # Times are UTC; GitHub may still start a scheduled run late or occasionally skip one.
+    - cron: "11,41 * * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "preview (safe check) · sync (commit if changed) · probe (save raw PSAL pages)"
+        type: choice
+        options: [preview, sync, probe]
+        default: preview
+
+permissions:
+  contents: write   # commit games.json when games change; update the sync-status branch
+  actions: write    # keep the schedule from being auto-disabled after 60 quiet days
+
+# Never run two at once. A run that starts while another is going waits;
+# if several pile up, only the newest waiting one is kept.
+concurrency:
+  group: psal-sync
+  cancel-in-progress: false
+
+env:
+  SYNC_CONTACT: ${{ github.server_url }}/${{ github.repository }}
+  PYTHONUNBUFFERED: "1"
+  STATUS_BRANCH: sync-status
+
+jobs:
+  sync:
+    if: github.event_name != 'schedule' || vars.PSAL_SYNC_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Choose mode
+        id: mode
+        run: |
+          MODE="${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'sync' }}"
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "Mode: $MODE"
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: sync/requirements.txt
+
+      - name: Install Python packages
+        run: pip install -r sync/requirements.txt
+
+      - name: Install headless Chromium (reads team schedules and game pages)
+        run: python -m playwright install --with-deps chromium
+
+      # Bookkeeping (which pages were read when, which scores were already checked)
+      # is kept between runs here, so runs with no changes don't need a commit.
+      - name: Restore sync state from the previous run
+        uses: actions/cache/restore@v5
+        with:
+          path: .sync-state
+          key: psal-state-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: psal-state-
+
+      - name: Run (${{ steps.mode.outputs.mode }})
+        id: run
+        timeout-minutes: 28   # leaves time to save state even if PSAL is very slow
+        env:
+          MODE: ${{ steps.mode.outputs.mode }}
+        run: |
+          case "$MODE" in
+            sync)    python sync/psal_sync.py sync    --data games.json --previous .sync-state/games.json ;;
+            preview) python sync/psal_sync.py preview --data games.json --previous .sync-state/games.json ;;
+            probe)   python sync/psal_sync.py probe ;;
+          esac
+
+      - name: Save completeness report
+        if: always() && (steps.mode.outputs.mode == 'sync' || steps.mode.outputs.mode == 'preview')
+        uses: actions/upload-artifact@v7
+        with:
+          name: psal-completeness-${{ github.run_id }}
+          path: sync/report/
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Save preview / debug pages
+        if: always() && (steps.mode.outputs.mode == 'probe' || steps.mode.outputs.mode == 'preview' || steps.run.outputs.status == 'error' || steps.run.outcome == 'failure')
+        uses: actions/upload-artifact@v7
+        with:
+          name: psal-${{ steps.mode.outputs.mode }}-${{ github.run_id }}
+          path: |
+            sync/debug/
+            sync/preview/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      # Commit (→ Vercel deploys) only when what visitors see changed.
+      - name: Commit games.json if games changed
+        id: commit
+        if: steps.mode.outputs.mode == 'sync' && steps.run.outputs.status == 'ok'
+        env:
+          HASH: ${{ steps.run.outputs.datahash }}
+          REPO: ${{ github.repository }}
+          OWNER: ${{ github.repository_owner }}
+          OWNER_ID: ${{ github.repository_owner_id }}
+          COMMIT_EMAIL: ${{ vars.COMMIT_EMAIL }}
+        run: |
+          [ -f vercel.json ] || echo '{}' > vercel.json
+          COMMITTED="$(git show HEAD:games.json 2>/dev/null | jq -r '.meta.dataHash // empty' 2>/dev/null || true)"
+          # vercel.json: serve /sync-status.json from this repo's sync-status branch, and never deploy that branch.
+          jq --arg url "https://raw.githubusercontent.com/$REPO/$STATUS_BRANCH/status.json" \
+             '.git.deploymentEnabled[env.STATUS_BRANCH] = false
+              | .rewrites = [{source: "/sync-status.json", destination: $url}]' vercel.json > vercel.json.new
+          if cmp -s vercel.json vercel.json.new; then rm vercel.json.new; else mv vercel.json.new vercel.json; fi
+          if [ "$HASH" = "$COMMITTED" ] && git diff --quiet -- vercel.json; then
+            echo "### ✅ No game changes — nothing committed, no redeploy" >> "$GITHUB_STEP_SUMMARY"
+            echo "committed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "$OWNER"
+          git config user.email "${COMMIT_EMAIL:-${OWNER_ID}+${OWNER}@users.noreply.github.com}"
+          git add games.json vercel.json
+          git commit -m "PSAL sync: games updated $(TZ=America/New_York date '+%b %-d, %-I:%M %p ET')"
+          for attempt in 1 2 3; do
+            if git push origin "HEAD:${GITHUB_REF_NAME}"; then
+              echo "committed=true" >> "$GITHUB_OUTPUT"
+              echo "### 🚀 games.json updated — Vercel will deploy this commit" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            git pull --rebase origin "${GITHUB_REF_NAME}" || { git rebase --abort || true; break; }
+          done
+          echo "::warning::Could not push games.json (someone pushed at the same time). The next run will retry."
+          echo "committed=false" >> "$GITHUB_OUTPUT"
+
+      # Tells the website "PSAL was checked at <time> and the data you're showing is still
+      # correct". The site uses it only when its fingerprint matches the games on screen.
+      - name: Update the "last checked" heartbeat
+        if: steps.mode.outputs.mode == 'sync' && steps.run.outputs.status == 'ok'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          HASH: ${{ steps.run.outputs.datahash }}
+          SYNCED_AT: ${{ steps.run.outputs.synced_at }}
+        run: |
+          D="$RUNNER_TEMP/heartbeat"
+          rm -rf "$D" && mkdir -p "$D" && cd "$D"
+          jq -n --arg t "$SYNCED_AT" --arg h "$HASH" '{status: "ok", checkedAt: $t, dataHash: $h}' > status.json
+          echo '{ "git": { "deploymentEnabled": false } }' > vercel.json   # Vercel ignores this branch
+          git init -q -b "$STATUS_BRANCH"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add status.json vercel.json
+          git commit -q -m "PSAL checked $SYNCED_AT"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" "HEAD:refs/heads/$STATUS_BRANCH"
+          echo "Heartbeat: $(cat status.json)"
+
+      - name: Keep the 30-minute schedule enabled
+        if: github.event_name == 'schedule'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/psal-sync.yml/enable" --silent
+
+      - name: Keep sync state for the next run
+        if: always() && steps.mode.outputs.mode == 'sync' && steps.run.outcome != 'skipped'
+        run: |
+          mkdir -p .sync-state
+          if jq -e '.games and .meta' games.json > /dev/null 2>&1; then cp games.json .sync-state/games.json; fi
+
+      - name: Upload sync state
+        if: always() && steps.mode.outputs.mode == 'sync' && steps.run.outcome != 'skipped'
+        uses: actions/cache/save@v5
+        with:
+          path: .sync-state
+          key: psal-state-${{ github.run_id }}-${{ github.run_attempt }}
