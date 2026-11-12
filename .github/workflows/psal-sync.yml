@@ -22,7 +22,7 @@ on:
   schedule:
     # Every 30 minutes, offset from :00/:30 because GitHub delays jobs that start on the hour.
     # Times are UTC; GitHub may still start a scheduled run late or occasionally skip one.
-    - cron: "11,41 * * * *"
+    - cron: "0,30 * * * *"
   workflow_dispatch:
     inputs:
       mode:
