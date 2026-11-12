@@ -71,7 +71,7 @@ jobs:
         run: pip install -r sync/requirements.txt
 
       - name: Install headless Chromium (reads team schedules and game pages)
-        run: python -m playwright install --with-deps chromium
+        run: python -m playwright install chromium
 
       # Bookkeeping (which pages were read when, which scores were already checked)
       # is kept between runs here, so runs with no changes don't need a commit.
