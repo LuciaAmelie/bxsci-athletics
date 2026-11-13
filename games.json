@@ -3,7 +3,7 @@
     "schemaVersion": 1,
     "school": "Bronx High School of Science",
     "source": "psal",
-    "lastSynced": "2026-11-12T15:14:57-05:00",
+    "lastSynced": "2026-11-12T20:18:07-05:00",
     "notes": "Collected automatically from public pages on psal.org. Unofficial — PSAL's website is the official source.",
     "seasons": [
       {
@@ -31,12 +31,12 @@
       ],
       "gamesInWindow": 267,
       "calendarGames": 215,
-      "addedFromTeamSchedules": 60,
+      "addedFromTeamSchedules": 74,
       "addedFromSportPages": 0,
       "duplicatesMerged": 0,
       "calendarGamesNotCollected": 0,
       "teamsKnown": 43,
-      "teamSchedulesRead": 22,
+      "teamSchedulesRead": 25,
       "teamSchedulesUnreadable": 0,
       "detailPagesChecked": 1,
       "scoresFound": 0,
@@ -45,9 +45,9 @@
       "scoreConflicts": 0,
       "coverageComplete": true,
       "coverageIssues": [],
-      "requests": 51,
+      "requests": 62,
       "lastFullRefresh": "2026-11-12T15:14:57-05:00",
-      "lastDiscovery": "2026-11-11T17:29:28-05:00",
+      "lastDiscovery": "2026-11-12T20:18:07-05:00",
       "teams": {
         "067": {
           "gender": "Boys",
@@ -55,7 +55,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Badminton",
-          "readAt": "2026-11-12T15:14:57-05:00",
+          "readAt": "2026-11-12T20:18:07-05:00",
           "rows": 15,
           "games": 15,
           "gamesInWindow": 15,
@@ -79,7 +79,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Bowling",
-          "readAt": "2026-11-12T15:14:57-05:00",
+          "readAt": "2026-11-12T20:18:07-05:00",
           "rows": 11,
           "games": 11,
           "gamesInWindow": 11,
@@ -91,7 +91,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Bowling",
-          "readAt": "2026-11-12T15:14:57-05:00",
+          "readAt": "2026-11-12T20:18:07-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -103,7 +103,7 @@
           "type": "boys",
           "division": "Bronx Science",
           "sport": "Cross Country",
-          "readAt": "2026-11-12T15:14:57-05:00",
+          "readAt": "2026-11-12T20:18:07-05:00",
           "rows": 13,
           "games": 12,
           "gamesInWindow": 12,
@@ -115,7 +115,7 @@
           "type": "girls",
           "division": "Bronx Science",
           "outOfRange": 0,
-          "readAt": "2026-11-12T15:14:57-05:00",
+          "readAt": "2026-11-12T20:18:07-05:00",
           "rows": 9,
           "games": 9,
           "gamesInWindow": 9,
@@ -127,7 +127,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Fencing",
-          "readAt": "2026-11-12T15:14:57-05:00",
+          "readAt": "2026-11-12T20:18:07-05:00",
           "rows": 11,
           "games": 11,
           "gamesInWindow": 11,
@@ -151,7 +151,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Golf",
-          "readAt": "2026-11-12T15:14:57-05:00",
+          "readAt": "2026-11-12T20:18:07-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -162,10 +162,12 @@
           "level": "Varsity",
           "type": "coed v",
           "division": "Bronx Science",
-          "readAt": "2026-11-11T17:29:28-05:00",
+          "readAt": "2026-11-12T20:18:07-05:00",
           "rows": 0,
           "games": 0,
-          "gamesInWindow": 0
+          "gamesInWindow": 0,
+          "sport": "Golf",
+          "outOfRange": 0
         },
         "012": {
           "gender": "Boys",
@@ -173,7 +175,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Soccer",
-          "readAt": "2026-11-12T15:14:57-05:00",
+          "readAt": "2026-11-12T20:18:07-05:00",
           "rows": 16,
           "games": 16,
           "gamesInWindow": 15,
@@ -197,7 +199,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Soccer",
-          "readAt": "2026-11-12T15:14:57-05:00",
+          "readAt": "2026-11-12T20:18:07-05:00",
           "rows": 18,
           "games": 18,
           "gamesInWindow": 17,
@@ -209,7 +211,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Swimming",
-          "readAt": "2026-11-12T15:14:57-05:00",
+          "readAt": "2026-11-12T20:18:07-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -221,7 +223,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Swimming",
-          "readAt": "2026-11-12T15:14:57-05:00",
+          "readAt": "2026-11-12T20:18:07-05:00",
           "rows": 14,
           "games": 14,
           "gamesInWindow": 14,
@@ -233,7 +235,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Tennis",
-          "readAt": "2026-11-12T15:14:57-05:00",
+          "readAt": "2026-11-12T20:18:07-05:00",
           "rows": 16,
           "games": 16,
           "gamesInWindow": 16,
@@ -255,7 +257,7 @@
           "type": "girls JV",
           "division": "Bronx Science",
           "sport": "Volleyball",
-          "readAt": "2026-11-12T15:14:57-05:00",
+          "readAt": "2026-11-12T20:18:07-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -267,7 +269,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Volleyball",
-          "readAt": "2026-11-12T15:14:57-05:00",
+          "readAt": "2026-11-12T20:18:07-05:00",
           "rows": 16,
           "games": 16,
           "gamesInWindow": 16,
@@ -291,7 +293,7 @@
           "type": "girls JV",
           "division": "Bronx Science",
           "sport": "Basketball",
-          "readAt": "2026-11-12T15:14:57-05:00",
+          "readAt": "2026-11-12T20:18:07-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -303,7 +305,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Basketball",
-          "readAt": "2026-11-12T15:14:57-05:00",
+          "readAt": "2026-11-12T20:18:07-05:00",
           "rows": 19,
           "games": 19,
           "gamesInWindow": 18,
@@ -315,7 +317,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Basketball",
-          "readAt": "2026-11-12T15:14:57-05:00",
+          "readAt": "2026-11-12T20:18:07-05:00",
           "rows": 19,
           "games": 19,
           "gamesInWindow": 17,
@@ -327,7 +329,7 @@
           "type": "boys JV",
           "division": "Bronx Science",
           "sport": "Basketball",
-          "readAt": "2026-11-12T15:14:57-05:00",
+          "readAt": "2026-11-12T20:18:07-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 9,
@@ -339,7 +341,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Gymnastics",
-          "readAt": "2026-11-12T15:14:57-05:00",
+          "readAt": "2026-11-12T20:18:07-05:00",
           "rows": 12,
           "games": 12,
           "gamesInWindow": 10,
@@ -373,7 +375,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Table Tennis",
-          "readAt": "2026-11-12T15:14:57-05:00",
+          "readAt": "2026-11-12T20:18:07-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -385,7 +387,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Table Tennis",
-          "readAt": "2026-11-12T15:14:57-05:00",
+          "readAt": "2026-11-12T20:18:07-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -397,7 +399,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Wrestling",
-          "readAt": "2026-11-12T15:14:57-05:00",
+          "readAt": "2026-11-12T20:18:07-05:00",
           "rows": 8,
           "games": 8,
           "gamesInWindow": 8,
@@ -432,10 +434,12 @@
           "level": "Varsity",
           "type": "boys v",
           "division": "Bronx Science",
-          "readAt": "2026-11-11T17:29:28-05:00",
+          "readAt": "2026-11-12T20:18:07-05:00",
           "rows": 14,
-          "games": 0,
-          "gamesInWindow": 0
+          "games": 14,
+          "gamesInWindow": 0,
+          "sport": "Baseball",
+          "outOfRange": 0
         },
         "056": {
           "gender": "Coed",
@@ -466,10 +470,12 @@
           "level": "Varsity",
           "type": "boys v",
           "division": "Bronx Science",
-          "readAt": "2026-11-11T17:29:28-05:00",
+          "readAt": "2026-11-12T20:18:07-05:00",
           "rows": 0,
           "games": 0,
-          "gamesInWindow": 0
+          "gamesInWindow": 0,
+          "sport": "Handball",
+          "outOfRange": 0
         },
         "020": {
           "gender": "Girls",
@@ -555,8 +561,8 @@
         }
       },
       "changes": {
-        "added": 0,
-        "updated": 1,
+        "added": 14,
+        "updated": 0,
         "rescheduled": 0,
         "markedCanceled": 0,
         "kept": 0,
@@ -565,7 +571,7 @@
       "warnings": []
     },
     "dayNotes": {},
-    "dataHash": "e5abf6108ab68739"
+    "dataHash": "137950d8d2161947"
   },
   "games": [
     {
@@ -5783,8 +5789,8 @@
           "team",
           "sportpage"
         ],
-        "checkedAt": "2026-11-12T15:14:57-05:00",
-        "checks": 6
+        "checkedAt": "2026-11-12T20:18:07-05:00",
+        "checks": 7
       }
     },
     {
@@ -8835,6 +8841,32 @@
       }
     },
     {
+      "id": "psal-006-512860",
+      "date": "2027-03-23",
+      "time": "16:00",
+      "sport": "Baseball",
+      "gender": "Boys",
+      "level": "Varsity",
+      "opponent": "South Bronx",
+      "event": null,
+      "round": null,
+      "homeAway": "away",
+      "location": "South Bronx HS Field",
+      "status": "scheduled",
+      "score": null,
+      "resultText": null,
+      "statusNote": null,
+      "psal": {
+        "sportCode": "006",
+        "gameId": "512860",
+        "url": "https://www.psal.org/games/game-detail.aspx#006/512860",
+        "teamCode": "006",
+        "sources": [
+          "team"
+        ]
+      }
+    },
+    {
       "id": "psal-036-514163",
       "date": "2027-03-23",
       "time": "16:00",
@@ -8939,6 +8971,32 @@
       }
     },
     {
+      "id": "psal-006-512866",
+      "date": "2027-03-29",
+      "time": "16:00",
+      "sport": "Baseball",
+      "gender": "Boys",
+      "level": "Varsity",
+      "opponent": "South Bronx",
+      "event": null,
+      "round": null,
+      "homeAway": "home",
+      "location": "Harris Park: Baseball-01",
+      "status": "scheduled",
+      "score": null,
+      "resultText": null,
+      "statusNote": null,
+      "psal": {
+        "sportCode": "006",
+        "gameId": "512866",
+        "url": "https://www.psal.org/games/game-detail.aspx#006/512866",
+        "teamCode": "006",
+        "sources": [
+          "team"
+        ]
+      }
+    },
+    {
       "id": "psal-022-513864",
       "date": "2027-03-29",
       "time": "16:00",
@@ -8985,6 +9043,32 @@
         "gameId": "514378",
         "url": "https://www.psal.org/games/game-detail.aspx#053/514378",
         "teamCode": "053",
+        "sources": [
+          "team"
+        ]
+      }
+    },
+    {
+      "id": "psal-006-512870",
+      "date": "2027-03-31",
+      "time": "16:00",
+      "sport": "Baseball",
+      "gender": "Boys",
+      "level": "Varsity",
+      "opponent": "John F. Kennedy Campus",
+      "event": null,
+      "round": null,
+      "homeAway": "home",
+      "location": "Harris Park: Baseball-05",
+      "status": "scheduled",
+      "score": null,
+      "resultText": null,
+      "statusNote": null,
+      "psal": {
+        "sportCode": "006",
+        "gameId": "512870",
+        "url": "https://www.psal.org/games/game-detail.aspx#006/512870",
+        "teamCode": "006",
         "sources": [
           "team"
         ]
@@ -9095,6 +9179,32 @@
       }
     },
     {
+      "id": "psal-006-512873",
+      "date": "2027-04-05",
+      "time": "16:00",
+      "sport": "Baseball",
+      "gender": "Boys",
+      "level": "Varsity",
+      "opponent": "John F. Kennedy Campus",
+      "event": null,
+      "round": null,
+      "homeAway": "away",
+      "location": "John F. Kennedy HS FIELD",
+      "status": "scheduled",
+      "score": null,
+      "resultText": null,
+      "statusNote": null,
+      "psal": {
+        "sportCode": "006",
+        "gameId": "512873",
+        "url": "https://www.psal.org/games/game-detail.aspx#006/512873",
+        "teamCode": "006",
+        "sources": [
+          "team"
+        ]
+      }
+    },
+    {
       "id": "psal-053-514388",
       "date": "2027-04-05",
       "time": "16:00",
@@ -9167,6 +9277,32 @@
         "gameId": "514171",
         "url": "https://www.psal.org/games/game-detail.aspx#036/514171",
         "teamCode": "036",
+        "sources": [
+          "team"
+        ]
+      }
+    },
+    {
+      "id": "psal-006-512875",
+      "date": "2027-04-07",
+      "time": "16:00",
+      "sport": "Baseball",
+      "gender": "Boys",
+      "level": "Varsity",
+      "opponent": "James Monroe Campus",
+      "event": null,
+      "round": null,
+      "homeAway": "away",
+      "location": "James Monroe HS (Mike Turo Field)",
+      "status": "scheduled",
+      "score": null,
+      "resultText": null,
+      "statusNote": null,
+      "psal": {
+        "sportCode": "006",
+        "gameId": "512875",
+        "url": "https://www.psal.org/games/game-detail.aspx#006/512875",
+        "teamCode": "006",
         "sources": [
           "team"
         ]
@@ -9277,6 +9413,32 @@
       }
     },
     {
+      "id": "psal-006-512880",
+      "date": "2027-04-10",
+      "time": "13:30",
+      "sport": "Baseball",
+      "gender": "Boys",
+      "level": "Varsity",
+      "opponent": "James Monroe Campus",
+      "event": null,
+      "round": null,
+      "homeAway": "home",
+      "location": "Harris Park: Baseball-05",
+      "status": "scheduled",
+      "score": null,
+      "resultText": null,
+      "statusNote": null,
+      "psal": {
+        "sportCode": "006",
+        "gameId": "512880",
+        "url": "https://www.psal.org/games/game-detail.aspx#006/512880",
+        "teamCode": "006",
+        "sources": [
+          "team"
+        ]
+      }
+    },
+    {
       "id": "psal-022-513839",
       "date": "2027-04-12",
       "time": "16:00",
@@ -9329,6 +9491,32 @@
       }
     },
     {
+      "id": "psal-006-512883",
+      "date": "2027-04-14",
+      "time": "16:00",
+      "sport": "Baseball",
+      "gender": "Boys",
+      "level": "Varsity",
+      "opponent": "Morris Educational Campus",
+      "event": null,
+      "round": null,
+      "homeAway": "home",
+      "location": "Harris Park: Baseball-05",
+      "status": "scheduled",
+      "score": null,
+      "resultText": null,
+      "statusNote": null,
+      "psal": {
+        "sportCode": "006",
+        "gameId": "512883",
+        "url": "https://www.psal.org/games/game-detail.aspx#006/512883",
+        "teamCode": "006",
+        "sources": [
+          "team"
+        ]
+      }
+    },
+    {
       "id": "psal-022-513843",
       "date": "2027-04-14",
       "time": "16:00",
@@ -9375,6 +9563,32 @@
         "gameId": "514414",
         "url": "https://www.psal.org/games/game-detail.aspx#053/514414",
         "teamCode": "053",
+        "sources": [
+          "team"
+        ]
+      }
+    },
+    {
+      "id": "psal-006-512887",
+      "date": "2027-04-16",
+      "time": "16:00",
+      "sport": "Baseball",
+      "gender": "Boys",
+      "level": "Varsity",
+      "opponent": "Morris Educational Campus",
+      "event": null,
+      "round": null,
+      "homeAway": "away",
+      "location": "Crotona Park: Baseball-03",
+      "status": "scheduled",
+      "score": null,
+      "resultText": null,
+      "statusNote": null,
+      "psal": {
+        "sportCode": "006",
+        "gameId": "512887",
+        "url": "https://www.psal.org/games/game-detail.aspx#006/512887",
+        "teamCode": "006",
         "sources": [
           "team"
         ]
@@ -9485,6 +9699,32 @@
       }
     },
     {
+      "id": "psal-006-512893",
+      "date": "2027-04-21",
+      "time": "16:00",
+      "sport": "Baseball",
+      "gender": "Boys",
+      "level": "Varsity",
+      "opponent": "Lehman Campus",
+      "event": null,
+      "round": null,
+      "homeAway": "away",
+      "location": "Lehman Campus - Field",
+      "status": "scheduled",
+      "score": null,
+      "resultText": null,
+      "statusNote": null,
+      "psal": {
+        "sportCode": "006",
+        "gameId": "512893",
+        "url": "https://www.psal.org/games/game-detail.aspx#006/512893",
+        "teamCode": "006",
+        "sources": [
+          "team"
+        ]
+      }
+    },
+    {
       "id": "psal-053-514430",
       "date": "2027-04-21",
       "time": "16:00",
@@ -9531,6 +9771,32 @@
         "gameId": "513853",
         "url": "https://www.psal.org/games/game-detail.aspx#022/513853",
         "teamCode": "022",
+        "sources": [
+          "team"
+        ]
+      }
+    },
+    {
+      "id": "psal-006-512897",
+      "date": "2027-05-03",
+      "time": "16:00",
+      "sport": "Baseball",
+      "gender": "Boys",
+      "level": "Varsity",
+      "opponent": "Lehman Campus",
+      "event": null,
+      "round": null,
+      "homeAway": "home",
+      "location": "Harris Park: Baseball-05",
+      "status": "scheduled",
+      "score": null,
+      "resultText": null,
+      "statusNote": null,
+      "psal": {
+        "sportCode": "006",
+        "gameId": "512897",
+        "url": "https://www.psal.org/games/game-detail.aspx#006/512897",
+        "teamCode": "006",
         "sources": [
           "team"
         ]
@@ -9615,6 +9881,32 @@
       }
     },
     {
+      "id": "psal-006-512900",
+      "date": "2027-05-05",
+      "time": "16:00",
+      "sport": "Baseball",
+      "gender": "Boys",
+      "level": "Varsity",
+      "opponent": "DeWitt Clinton",
+      "event": null,
+      "round": null,
+      "homeAway": "home",
+      "location": "Harris Park: Baseball-05",
+      "status": "scheduled",
+      "score": null,
+      "resultText": null,
+      "statusNote": null,
+      "psal": {
+        "sportCode": "006",
+        "gameId": "512900",
+        "url": "https://www.psal.org/games/game-detail.aspx#006/512900",
+        "teamCode": "006",
+        "sources": [
+          "team"
+        ]
+      }
+    },
+    {
       "id": "psal-053-514297",
       "date": "2027-05-06",
       "time": "16:00",
@@ -9635,6 +9927,84 @@
         "gameId": "514297",
         "url": "https://www.psal.org/games/game-detail.aspx#053/514297",
         "teamCode": "053",
+        "sources": [
+          "team"
+        ]
+      }
+    },
+    {
+      "id": "psal-006-512904",
+      "date": "2027-05-07",
+      "time": "16:00",
+      "sport": "Baseball",
+      "gender": "Boys",
+      "level": "Varsity",
+      "opponent": "DeWitt Clinton",
+      "event": null,
+      "round": null,
+      "homeAway": "away",
+      "location": "Dewitt Clinton HS Field",
+      "status": "scheduled",
+      "score": null,
+      "resultText": null,
+      "statusNote": null,
+      "psal": {
+        "sportCode": "006",
+        "gameId": "512904",
+        "url": "https://www.psal.org/games/game-detail.aspx#006/512904",
+        "teamCode": "006",
+        "sources": [
+          "team"
+        ]
+      }
+    },
+    {
+      "id": "psal-006-512909",
+      "date": "2027-05-12",
+      "time": "16:00",
+      "sport": "Baseball",
+      "gender": "Boys",
+      "level": "Varsity",
+      "opponent": "Walton Campus",
+      "event": null,
+      "round": null,
+      "homeAway": "home",
+      "location": "Harris Park: Baseball-05",
+      "status": "scheduled",
+      "score": null,
+      "resultText": null,
+      "statusNote": null,
+      "psal": {
+        "sportCode": "006",
+        "gameId": "512909",
+        "url": "https://www.psal.org/games/game-detail.aspx#006/512909",
+        "teamCode": "006",
+        "sources": [
+          "team"
+        ]
+      }
+    },
+    {
+      "id": "psal-006-512913",
+      "date": "2027-05-14",
+      "time": "16:00",
+      "sport": "Baseball",
+      "gender": "Boys",
+      "level": "Varsity",
+      "opponent": "Walton Campus",
+      "event": null,
+      "round": null,
+      "homeAway": "away",
+      "location": "Harris Park: Baseball-01",
+      "status": "scheduled",
+      "score": null,
+      "resultText": null,
+      "statusNote": null,
+      "psal": {
+        "sportCode": "006",
+        "gameId": "512913",
+        "url": "https://www.psal.org/games/game-detail.aspx#006/512913",
+        "teamCode": "006",
         "sources": [
           "team"
         ]
