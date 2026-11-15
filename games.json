@@ -3,7 +3,7 @@
     "schemaVersion": 1,
     "school": "Bronx High School of Science",
     "source": "psal",
-    "lastSynced": "2026-11-15T09:54:09-05:00",
+    "lastSynced": "2026-11-15T15:04:49-05:00",
     "notes": "Collected automatically from public pages on psal.org. Unofficial — PSAL's website is the official source.",
     "seasons": [
       {
@@ -29,23 +29,23 @@
         "2026-09-01",
         "2027-01-31"
       ],
-      "gamesInWindow": 269,
+      "gamesInWindow": 270,
       "calendarGames": 215,
-      "addedFromTeamSchedules": 62,
+      "addedFromTeamSchedules": 85,
       "addedFromSportPages": 0,
       "duplicatesMerged": 0,
       "calendarGamesNotCollected": 0,
       "teamsKnown": 43,
       "teamSchedulesRead": 25,
       "teamSchedulesUnreadable": 0,
-      "detailPagesChecked": 1,
+      "detailPagesChecked": 0,
       "scoresFound": 0,
       "playedGamesStillWithoutScore": 10,
       "scoresFromTeamSchedules": 117,
       "scoreConflicts": 0,
       "coverageComplete": true,
       "coverageIssues": [],
-      "requests": 54,
+      "requests": 33,
       "lastFullRefresh": "2026-11-15T09:54:09-05:00",
       "lastDiscovery": "2026-11-15T02:25:53-05:00",
       "teams": {
@@ -55,7 +55,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Badminton",
-          "readAt": "2026-11-15T09:54:09-05:00",
+          "readAt": "2026-11-15T15:04:49-05:00",
           "rows": 15,
           "games": 15,
           "gamesInWindow": 15,
@@ -79,7 +79,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Bowling",
-          "readAt": "2026-11-15T09:54:09-05:00",
+          "readAt": "2026-11-15T15:04:49-05:00",
           "rows": 11,
           "games": 11,
           "gamesInWindow": 11,
@@ -91,7 +91,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Bowling",
-          "readAt": "2026-11-15T09:54:09-05:00",
+          "readAt": "2026-11-15T15:04:49-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -103,7 +103,7 @@
           "type": "boys",
           "division": "Bronx Science",
           "sport": "Cross Country",
-          "readAt": "2026-11-15T09:54:09-05:00",
+          "readAt": "2026-11-15T15:04:49-05:00",
           "rows": 13,
           "games": 12,
           "gamesInWindow": 12,
@@ -115,10 +115,10 @@
           "type": "girls",
           "division": "Bronx Science",
           "outOfRange": 0,
-          "readAt": "2026-11-15T09:54:09-05:00",
-          "rows": 10,
-          "games": 10,
-          "gamesInWindow": 10,
+          "readAt": "2026-11-15T15:04:49-05:00",
+          "rows": 11,
+          "games": 11,
+          "gamesInWindow": 11,
           "sport": "Cross Country"
         },
         "054": {
@@ -127,7 +127,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Fencing",
-          "readAt": "2026-11-15T09:54:09-05:00",
+          "readAt": "2026-11-15T15:04:49-05:00",
           "rows": 11,
           "games": 11,
           "gamesInWindow": 11,
@@ -151,7 +151,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Golf",
-          "readAt": "2026-11-15T09:54:09-05:00",
+          "readAt": "2026-11-15T15:04:49-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -175,7 +175,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Soccer",
-          "readAt": "2026-11-15T09:54:09-05:00",
+          "readAt": "2026-11-15T15:04:49-05:00",
           "rows": 16,
           "games": 16,
           "gamesInWindow": 15,
@@ -199,7 +199,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Soccer",
-          "readAt": "2026-11-15T09:54:09-05:00",
+          "readAt": "2026-11-15T15:04:49-05:00",
           "rows": 18,
           "games": 18,
           "gamesInWindow": 17,
@@ -211,7 +211,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Swimming",
-          "readAt": "2026-11-15T09:54:09-05:00",
+          "readAt": "2026-11-15T15:04:49-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -223,7 +223,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Swimming",
-          "readAt": "2026-11-15T09:54:09-05:00",
+          "readAt": "2026-11-15T15:04:49-05:00",
           "rows": 14,
           "games": 14,
           "gamesInWindow": 14,
@@ -235,7 +235,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Tennis",
-          "readAt": "2026-11-15T09:54:09-05:00",
+          "readAt": "2026-11-15T15:04:49-05:00",
           "rows": 16,
           "games": 16,
           "gamesInWindow": 16,
@@ -259,7 +259,7 @@
           "type": "girls JV",
           "division": "Bronx Science",
           "sport": "Volleyball",
-          "readAt": "2026-11-15T09:54:09-05:00",
+          "readAt": "2026-11-15T15:04:49-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -271,7 +271,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Volleyball",
-          "readAt": "2026-11-15T09:54:09-05:00",
+          "readAt": "2026-11-15T15:04:49-05:00",
           "rows": 16,
           "games": 16,
           "gamesInWindow": 16,
@@ -295,7 +295,7 @@
           "type": "girls JV",
           "division": "Bronx Science",
           "sport": "Basketball",
-          "readAt": "2026-11-15T09:54:09-05:00",
+          "readAt": "2026-11-15T15:04:49-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -307,7 +307,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Basketball",
-          "readAt": "2026-11-15T09:54:09-05:00",
+          "readAt": "2026-11-15T15:04:49-05:00",
           "rows": 19,
           "games": 19,
           "gamesInWindow": 18,
@@ -319,7 +319,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Basketball",
-          "readAt": "2026-11-15T09:54:09-05:00",
+          "readAt": "2026-11-15T15:04:49-05:00",
           "rows": 21,
           "games": 20,
           "gamesInWindow": 18,
@@ -331,7 +331,7 @@
           "type": "boys JV",
           "division": "Bronx Science",
           "sport": "Basketball",
-          "readAt": "2026-11-15T09:54:09-05:00",
+          "readAt": "2026-11-15T15:04:49-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 9,
@@ -343,7 +343,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Gymnastics",
-          "readAt": "2026-11-15T09:54:09-05:00",
+          "readAt": "2026-11-15T15:04:49-05:00",
           "rows": 12,
           "games": 12,
           "gamesInWindow": 10,
@@ -379,7 +379,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Table Tennis",
-          "readAt": "2026-11-15T09:54:09-05:00",
+          "readAt": "2026-11-15T15:04:49-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -391,7 +391,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Table Tennis",
-          "readAt": "2026-11-15T09:54:09-05:00",
+          "readAt": "2026-11-15T15:04:49-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -403,7 +403,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Wrestling",
-          "readAt": "2026-11-15T09:54:09-05:00",
+          "readAt": "2026-11-15T15:04:49-05:00",
           "rows": 8,
           "games": 8,
           "gamesInWindow": 8,
@@ -500,7 +500,7 @@
           "division": "Bronx Science",
           "sport": "Lacrosse",
           "outOfRange": 0,
-          "readAt": "2026-11-13T21:34:57-05:00",
+          "readAt": "2026-11-15T15:04:49-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 0
@@ -512,7 +512,7 @@
           "division": "Bronx Science",
           "sport": "Lacrosse",
           "outOfRange": 0,
-          "readAt": "2026-11-13T21:34:57-05:00",
+          "readAt": "2026-11-15T15:04:49-05:00",
           "rows": 12,
           "games": 12,
           "gamesInWindow": 0
@@ -548,7 +548,7 @@
           "division": "Bronx Science",
           "sport": "Softball",
           "outOfRange": 0,
-          "readAt": "2026-11-13T21:34:57-05:00",
+          "readAt": "2026-11-15T15:04:49-05:00",
           "rows": 0,
           "games": 0,
           "gamesInWindow": 0
@@ -567,7 +567,7 @@
         }
       },
       "changes": {
-        "added": 2,
+        "added": 1,
         "updated": 0,
         "rescheduled": 0,
         "markedCanceled": 0,
@@ -577,7 +577,7 @@
       "warnings": []
     },
     "dayNotes": {},
-    "dataHash": "bcf080d8c8f05bbc"
+    "dataHash": "4115b435064bdb63"
   },
   "games": [
     {
@@ -2716,8 +2716,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#047/506328",
         "teamCode": "047",
         "sources": [
-          "team",
-          "sportpage"
+          "team"
         ]
       }
     },
@@ -3078,8 +3077,7 @@
         "teamCode": "047",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ],
         "scoreSource": "team",
         "checkedAt": "2026-11-11T11:36:28-05:00",
@@ -3581,8 +3579,7 @@
         "teamCode": "047",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ],
         "scoreSource": "team",
         "checkedAt": "2026-11-11T11:36:28-05:00",
@@ -3869,8 +3866,7 @@
         "teamCode": "067",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ],
         "scoreSource": "team",
         "checkedAt": "2026-11-11T11:36:28-05:00",
@@ -4250,8 +4246,7 @@
         "teamCode": "047",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ],
         "scoreSource": "team",
         "checkedAt": "2026-11-11T11:36:28-05:00",
@@ -4314,8 +4309,7 @@
         "teamCode": "024",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ],
         "scoreSource": "team",
         "checkedAt": "2026-11-11T11:36:28-05:00",
@@ -4433,8 +4427,7 @@
         "teamCode": "024",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ],
         "scoreSource": "team",
         "checkedAt": "2026-11-11T11:36:28-05:00",
@@ -4493,8 +4486,7 @@
         "teamCode": "067",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ],
         "scoreSource": "team",
         "checkedAt": "2026-11-11T11:36:28-05:00",
@@ -4626,8 +4618,7 @@
         "teamCode": "024",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ],
         "scoreSource": "team",
         "checkedAt": "2026-11-11T11:36:28-05:00",
@@ -4996,8 +4987,7 @@
         "teamCode": "047",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ],
         "scoreSource": "team",
         "checkedAt": "2026-11-11T11:36:28-05:00",
@@ -5085,8 +5075,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#054/503537",
         "teamCode": "054",
         "sources": [
-          "team",
-          "sportpage"
+          "team"
         ]
       }
     },
@@ -5215,8 +5204,7 @@
         "teamCode": "047",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ],
         "scoreSource": "team",
         "checkedAt": "2026-11-11T11:36:28-05:00",
@@ -5249,8 +5237,7 @@
         "teamCode": "024",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ],
         "scoreSource": "team",
         "checkedAt": "2026-11-11T11:36:28-05:00",
@@ -5283,8 +5270,7 @@
         "teamCode": "054",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ],
         "scoreSource": "team",
         "checkedAt": "2026-11-11T11:36:28-05:00",
@@ -5469,8 +5455,7 @@
         "teamCode": "067",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ],
         "scoreSource": "team",
         "checkedAt": "2026-11-11T11:36:28-05:00",
@@ -5536,8 +5521,7 @@
         "teamCode": "067",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ],
         "scoreSource": "team",
         "checkedAt": "2026-11-11T11:36:28-05:00",
@@ -5603,8 +5587,7 @@
         "teamCode": "054",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ],
         "scoreSource": "team",
         "checkedAt": "2026-11-11T11:36:28-05:00",
@@ -5670,8 +5653,7 @@
         "teamCode": "024",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ],
         "scoreSource": "team",
         "checkedAt": "2026-11-11T11:36:28-05:00",
@@ -5732,6 +5714,32 @@
       }
     },
     {
+      "id": "psal-034-9872",
+      "date": "2026-11-07",
+      "time": "09:00",
+      "sport": "Cross Country",
+      "gender": "Girls",
+      "level": "Varsity",
+      "opponent": null,
+      "event": "City Championships",
+      "round": "Championship",
+      "homeAway": "neutral",
+      "location": "Van Cortlandt Park - Track & Field",
+      "status": "scheduled",
+      "score": null,
+      "resultText": null,
+      "statusNote": null,
+      "psal": {
+        "sportCode": "034",
+        "gameId": "9872",
+        "url": "https://www.psal.org/games/game-detail.aspx#034/9872",
+        "teamCode": "034",
+        "sources": [
+          "team"
+        ]
+      }
+    },
+    {
       "id": "psal-024-511680",
       "date": "2026-11-07",
       "time": "17:00",
@@ -5757,8 +5765,7 @@
         "teamCode": "024",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ],
         "scoreSource": "team",
         "checkedAt": "2026-11-11T11:36:28-05:00",
@@ -5821,8 +5828,7 @@
         "teamCode": "067",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ],
         "checkedAt": "2026-11-15T09:54:09-05:00",
         "checks": 15
@@ -5876,8 +5882,7 @@
         "url": "https://www.psal.org/games/game-detail.aspx#054/503546",
         "teamCode": "054",
         "sources": [
-          "team",
-          "sportpage"
+          "team"
         ]
       }
     },
@@ -5982,8 +5987,7 @@
         "teamCode": "013",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ]
       }
     },
@@ -6117,8 +6121,7 @@
         "teamCode": "013",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ]
       }
     },
@@ -6172,8 +6175,7 @@
         "teamCode": "066",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ]
       }
     },
@@ -6200,8 +6202,7 @@
         "teamCode": "019",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ]
       }
     },
@@ -6255,8 +6256,7 @@
         "teamCode": "013",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ]
       }
     },
@@ -6283,8 +6283,7 @@
         "teamCode": "065",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ]
       }
     },
@@ -6311,8 +6310,7 @@
         "teamCode": "017",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ]
       }
     },
@@ -6420,8 +6418,7 @@
         "teamCode": "065",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ]
       }
     },
@@ -6448,8 +6445,7 @@
         "teamCode": "017",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ]
       }
     },
@@ -6692,8 +6688,7 @@
         "teamCode": "019",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ]
       }
     },
@@ -6828,8 +6823,7 @@
         "teamCode": "019",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ]
       }
     },
@@ -6856,8 +6850,7 @@
         "teamCode": "019",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ]
       }
     },
@@ -7073,8 +7066,7 @@
         "teamCode": "019",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ]
       }
     },
@@ -7101,8 +7093,7 @@
         "teamCode": "019",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ]
       }
     },
@@ -7991,8 +7982,7 @@
         "teamCode": "019",
         "sources": [
           "calendar",
-          "team",
-          "sportpage"
+          "team"
         ]
       }
     },
