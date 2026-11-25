@@ -3,7 +3,7 @@
     "schemaVersion": 1,
     "school": "Bronx High School of Science",
     "source": "psal",
-    "lastSynced": "2026-11-24T23:27:01-05:00",
+    "lastSynced": "2026-11-25T09:47:40-05:00",
     "notes": "Collected automatically from public pages on psal.org. Unofficial — PSAL's website is the official source.",
     "seasons": [
       {
@@ -31,7 +31,7 @@
       ],
       "gamesInWindow": 276,
       "calendarGames": 220,
-      "addedFromTeamSchedules": 78,
+      "addedFromTeamSchedules": 76,
       "addedFromSportPages": 0,
       "duplicatesMerged": 0,
       "calendarGamesNotCollected": 0,
@@ -45,10 +45,10 @@
       "scoreConflicts": 0,
       "coverageComplete": false,
       "coverageIssues": [
-        "10 team schedule(s) not read in over 48 h: 006, 010, 011, 014, 016, 056, 061, 064, 068, 075"
+        "10 team schedule(s) not read in over 48 h: 006, 010, 011, 014, 016, 020, 022, 064, 068, 075"
       ],
       "requests": 55,
-      "lastFullRefresh": "2026-11-24T23:27:01-05:00",
+      "lastFullRefresh": "2026-11-25T09:47:40-05:00",
       "lastDiscovery": "2026-11-24T16:26:08-05:00",
       "teams": {
         "067": {
@@ -57,7 +57,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Badminton",
-          "readAt": "2026-11-24T23:27:01-05:00",
+          "readAt": "2026-11-25T09:47:40-05:00",
           "rows": 15,
           "games": 15,
           "gamesInWindow": 15,
@@ -81,7 +81,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Bowling",
-          "readAt": "2026-11-24T23:27:01-05:00",
+          "readAt": "2026-11-25T09:47:40-05:00",
           "rows": 11,
           "games": 11,
           "gamesInWindow": 11,
@@ -93,7 +93,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Bowling",
-          "readAt": "2026-11-24T23:27:01-05:00",
+          "readAt": "2026-11-25T09:47:40-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -105,7 +105,7 @@
           "type": "boys",
           "division": "Bronx Science",
           "sport": "Cross Country",
-          "readAt": "2026-11-24T23:27:01-05:00",
+          "readAt": "2026-11-25T09:47:40-05:00",
           "rows": 13,
           "games": 12,
           "gamesInWindow": 12,
@@ -117,7 +117,7 @@
           "type": "girls",
           "division": "Bronx Science",
           "outOfRange": 0,
-          "readAt": "2026-11-24T23:27:01-05:00",
+          "readAt": "2026-11-25T09:47:40-05:00",
           "rows": 11,
           "games": 11,
           "gamesInWindow": 11,
@@ -129,7 +129,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Fencing",
-          "readAt": "2026-11-24T23:27:01-05:00",
+          "readAt": "2026-11-25T09:47:40-05:00",
           "rows": 11,
           "games": 11,
           "gamesInWindow": 11,
@@ -153,7 +153,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Golf",
-          "readAt": "2026-11-24T23:27:01-05:00",
+          "readAt": "2026-11-25T09:47:40-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -177,7 +177,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Soccer",
-          "readAt": "2026-11-24T23:27:01-05:00",
+          "readAt": "2026-11-25T09:47:40-05:00",
           "rows": 16,
           "games": 16,
           "gamesInWindow": 15,
@@ -201,7 +201,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Soccer",
-          "readAt": "2026-11-24T23:27:01-05:00",
+          "readAt": "2026-11-25T09:47:40-05:00",
           "rows": 18,
           "games": 18,
           "gamesInWindow": 17,
@@ -213,7 +213,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Swimming",
-          "readAt": "2026-11-24T23:27:01-05:00",
+          "readAt": "2026-11-25T09:47:40-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -225,7 +225,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Swimming",
-          "readAt": "2026-11-24T23:27:01-05:00",
+          "readAt": "2026-11-25T09:47:40-05:00",
           "rows": 14,
           "games": 14,
           "gamesInWindow": 14,
@@ -237,7 +237,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Tennis",
-          "readAt": "2026-11-24T23:27:01-05:00",
+          "readAt": "2026-11-25T09:47:40-05:00",
           "rows": 16,
           "games": 16,
           "gamesInWindow": 16,
@@ -261,7 +261,7 @@
           "type": "girls JV",
           "division": "Bronx Science",
           "sport": "Volleyball",
-          "readAt": "2026-11-24T23:27:01-05:00",
+          "readAt": "2026-11-25T09:47:40-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -273,7 +273,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Volleyball",
-          "readAt": "2026-11-24T23:27:01-05:00",
+          "readAt": "2026-11-25T09:47:40-05:00",
           "rows": 16,
           "games": 16,
           "gamesInWindow": 16,
@@ -297,7 +297,7 @@
           "type": "girls JV",
           "division": "Bronx Science",
           "sport": "Basketball",
-          "readAt": "2026-11-24T23:27:01-05:00",
+          "readAt": "2026-11-25T09:47:40-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -309,7 +309,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Basketball",
-          "readAt": "2026-11-24T23:27:01-05:00",
+          "readAt": "2026-11-25T09:47:40-05:00",
           "rows": 19,
           "games": 19,
           "gamesInWindow": 18,
@@ -321,7 +321,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Basketball",
-          "readAt": "2026-11-24T23:27:01-05:00",
+          "readAt": "2026-11-25T09:47:40-05:00",
           "rows": 19,
           "games": 19,
           "gamesInWindow": 17,
@@ -333,7 +333,7 @@
           "type": "boys JV",
           "division": "Bronx Science",
           "sport": "Basketball",
-          "readAt": "2026-11-24T23:27:01-05:00",
+          "readAt": "2026-11-25T09:47:40-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 9,
@@ -345,7 +345,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Gymnastics",
-          "readAt": "2026-11-24T23:27:01-05:00",
+          "readAt": "2026-11-25T09:47:40-05:00",
           "rows": 12,
           "games": 12,
           "gamesInWindow": 10,
@@ -369,7 +369,7 @@
           "type": "boys",
           "division": "Bronx Science",
           "outOfRange": 0,
-          "readAt": "2026-11-24T23:27:01-05:00",
+          "readAt": "2026-11-25T09:47:40-05:00",
           "rows": 9,
           "games": 9,
           "gamesInWindow": 6,
@@ -381,7 +381,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Table Tennis",
-          "readAt": "2026-11-24T23:27:01-05:00",
+          "readAt": "2026-11-25T09:47:40-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -393,7 +393,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Table Tennis",
-          "readAt": "2026-11-24T23:27:01-05:00",
+          "readAt": "2026-11-25T09:47:40-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -405,7 +405,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Wrestling",
-          "readAt": "2026-11-24T23:27:01-05:00",
+          "readAt": "2026-11-25T09:47:40-05:00",
           "rows": 8,
           "games": 8,
           "gamesInWindow": 8,
@@ -454,7 +454,7 @@
           "division": "Bronx Science",
           "sport": "Cricket",
           "outOfRange": 0,
-          "readAt": "2026-11-22T04:24:48-05:00",
+          "readAt": "2026-11-25T09:47:40-05:00",
           "rows": 0,
           "games": 0,
           "gamesInWindow": 0
@@ -466,7 +466,7 @@
           "division": "Bronx Science",
           "sport": "Flag Football",
           "outOfRange": 0,
-          "readAt": "2026-11-22T04:24:48-05:00",
+          "readAt": "2026-11-25T09:47:40-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 0
@@ -570,8 +570,8 @@
       },
       "changes": {
         "added": 0,
-        "updated": 2,
-        "rescheduled": 1,
+        "updated": 5,
+        "rescheduled": 2,
         "markedCanceled": 0,
         "kept": 0,
         "reidentified": 0
@@ -579,7 +579,7 @@
       "warnings": []
     },
     "dayNotes": {},
-    "dataHash": "9cc1cfbddc155bdf"
+    "dataHash": "18fc1b955be50ac8"
   },
   "games": [
     {
@@ -5890,7 +5890,7 @@
           "team"
         ]
       },
-      "missingRuns": 22
+      "missingRuns": 23
     },
     {
       "id": "psal-054-503546",
@@ -6221,7 +6221,8 @@
         "teamCode": "013",
         "sources": [
           "calendar",
-          "team"
+          "team",
+          "sportpage"
         ]
       }
     },
@@ -6358,7 +6359,8 @@
         "teamCode": "013",
         "sources": [
           "calendar",
-          "team"
+          "team",
+          "sportpage"
         ]
       }
     },
@@ -6605,7 +6607,8 @@
         "teamCode": "013",
         "sources": [
           "calendar",
-          "team"
+          "team",
+          "sportpage"
         ]
       }
     },
@@ -9070,7 +9073,7 @@
       "event": null,
       "round": null,
       "homeAway": "away",
-      "location": "Randall's Island Field 82",
+      "location": "Harris Park: Soccer-01",
       "status": "scheduled",
       "score": null,
       "resultText": null,
@@ -9356,7 +9359,7 @@
       "event": null,
       "round": null,
       "homeAway": "home",
-      "location": "Van Cortlandt Park - Stadium-Soccer-08",
+      "location": "Williamsbridge Oval: Soccer-01",
       "status": "scheduled",
       "score": null,
       "resultText": null,
@@ -9486,7 +9489,7 @@
       "event": null,
       "round": null,
       "homeAway": "home",
-      "location": "Van Cortlandt Park - Stadium-Soccer-08",
+      "location": "Macombs Dam Park: Soccer-01",
       "status": "scheduled",
       "score": null,
       "resultText": null,
@@ -10230,6 +10233,32 @@
       }
     },
     {
+      "id": "psal-061-514746",
+      "date": "2027-04-15",
+      "time": "16:00",
+      "sport": "Flag Football",
+      "gender": "Girls",
+      "level": "Varsity",
+      "opponent": "East Harlem Pride",
+      "event": null,
+      "round": null,
+      "homeAway": "away",
+      "location": "Randall's Island Field 81",
+      "status": "scheduled",
+      "score": null,
+      "resultText": null,
+      "statusNote": "Rescheduled from Apr 16",
+      "psal": {
+        "sportCode": "061",
+        "gameId": "514746",
+        "url": "https://www.psal.org/games/game-detail.aspx#061/514746",
+        "teamCode": "061",
+        "sources": [
+          "team"
+        ]
+      }
+    },
+    {
       "id": "psal-053-514414",
       "date": "2027-04-15",
       "time": "16:00",
@@ -10276,32 +10305,6 @@
         "gameId": "514810",
         "url": "https://www.psal.org/games/game-detail.aspx#028/514810",
         "teamCode": "028",
-        "sources": [
-          "team"
-        ]
-      }
-    },
-    {
-      "id": "psal-061-514746",
-      "date": "2027-04-16",
-      "time": "16:00",
-      "sport": "Flag Football",
-      "gender": "Girls",
-      "level": "Varsity",
-      "opponent": "East Harlem Pride",
-      "event": null,
-      "round": null,
-      "homeAway": "away",
-      "location": "Randall's Island Field 91",
-      "status": "scheduled",
-      "score": null,
-      "resultText": null,
-      "statusNote": null,
-      "psal": {
-        "sportCode": "061",
-        "gameId": "514746",
-        "url": "https://www.psal.org/games/game-detail.aspx#061/514746",
-        "teamCode": "061",
         "sources": [
           "team"
         ]
@@ -10438,6 +10441,32 @@
       }
     },
     {
+      "id": "psal-061-514753",
+      "date": "2027-04-19",
+      "time": "16:00",
+      "sport": "Flag Football",
+      "gender": "Girls",
+      "level": "Varsity",
+      "opponent": "Graphics Campus",
+      "event": null,
+      "round": null,
+      "homeAway": "home",
+      "location": "Van Cortlandt Park: Parade Ground-Soccer-05",
+      "status": "scheduled",
+      "score": null,
+      "resultText": null,
+      "statusNote": "Rescheduled from Apr 21",
+      "psal": {
+        "sportCode": "061",
+        "gameId": "514753",
+        "url": "https://www.psal.org/games/game-detail.aspx#061/514753",
+        "teamCode": "061",
+        "sources": [
+          "team"
+        ]
+      }
+    },
+    {
       "id": "psal-022-513849",
       "date": "2027-04-20",
       "time": "16:00",
@@ -10510,32 +10539,6 @@
         "gameId": "512893",
         "url": "https://www.psal.org/games/game-detail.aspx#006/512893",
         "teamCode": "006",
-        "sources": [
-          "team"
-        ]
-      }
-    },
-    {
-      "id": "psal-061-514753",
-      "date": "2027-04-21",
-      "time": "16:00",
-      "sport": "Flag Football",
-      "gender": "Girls",
-      "level": "Varsity",
-      "opponent": "Graphics Campus",
-      "event": null,
-      "round": null,
-      "homeAway": "home",
-      "location": "Van Cortlandt Park - Stadium-Soccer-08",
-      "status": "scheduled",
-      "score": null,
-      "resultText": null,
-      "statusNote": null,
-      "psal": {
-        "sportCode": "061",
-        "gameId": "514753",
-        "url": "https://www.psal.org/games/game-detail.aspx#061/514753",
-        "teamCode": "061",
         "sources": [
           "team"
         ]
