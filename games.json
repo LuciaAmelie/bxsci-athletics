@@ -3,7 +3,7 @@
     "schemaVersion": 1,
     "school": "Bronx High School of Science",
     "source": "psal",
-    "lastSynced": "2026-11-25T09:47:40-05:00",
+    "lastSynced": "2026-11-25T18:26:35-05:00",
     "notes": "Collected automatically from public pages on psal.org. Unofficial — PSAL's website is the official source.",
     "seasons": [
       {
@@ -29,9 +29,9 @@
         "2026-09-01",
         "2027-01-31"
       ],
-      "gamesInWindow": 276,
+      "gamesInWindow": 277,
       "calendarGames": 220,
-      "addedFromTeamSchedules": 76,
+      "addedFromTeamSchedules": 67,
       "addedFromSportPages": 0,
       "duplicatesMerged": 0,
       "calendarGamesNotCollected": 0,
@@ -45,11 +45,11 @@
       "scoreConflicts": 0,
       "coverageComplete": false,
       "coverageIssues": [
-        "10 team schedule(s) not read in over 48 h: 006, 010, 011, 014, 016, 020, 022, 064, 068, 075"
+        "8 team schedule(s) not read in over 48 h: 006, 010, 011, 014, 016, 020, 022, 075"
       ],
-      "requests": 55,
-      "lastFullRefresh": "2026-11-25T09:47:40-05:00",
-      "lastDiscovery": "2026-11-24T16:26:08-05:00",
+      "requests": 71,
+      "lastFullRefresh": "2026-11-25T18:26:35-05:00",
+      "lastDiscovery": "2026-11-25T18:26:35-05:00",
       "teams": {
         "067": {
           "gender": "Boys",
@@ -57,7 +57,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Badminton",
-          "readAt": "2026-11-25T09:47:40-05:00",
+          "readAt": "2026-11-25T18:26:35-05:00",
           "rows": 15,
           "games": 15,
           "gamesInWindow": 15,
@@ -70,7 +70,7 @@
           "division": "Bronx Science",
           "sport": "Badminton",
           "outOfRange": 0,
-          "readAt": "2026-11-22T12:16:13-05:00",
+          "readAt": "2026-11-25T18:26:35-05:00",
           "rows": 0,
           "games": 0,
           "gamesInWindow": 0
@@ -81,7 +81,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Bowling",
-          "readAt": "2026-11-25T09:47:40-05:00",
+          "readAt": "2026-11-25T18:26:35-05:00",
           "rows": 11,
           "games": 11,
           "gamesInWindow": 11,
@@ -93,7 +93,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Bowling",
-          "readAt": "2026-11-25T09:47:40-05:00",
+          "readAt": "2026-11-25T18:26:35-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -105,7 +105,7 @@
           "type": "boys",
           "division": "Bronx Science",
           "sport": "Cross Country",
-          "readAt": "2026-11-25T09:47:40-05:00",
+          "readAt": "2026-11-25T18:26:35-05:00",
           "rows": 13,
           "games": 12,
           "gamesInWindow": 12,
@@ -117,7 +117,7 @@
           "type": "girls",
           "division": "Bronx Science",
           "outOfRange": 0,
-          "readAt": "2026-11-25T09:47:40-05:00",
+          "readAt": "2026-11-25T18:26:35-05:00",
           "rows": 11,
           "games": 11,
           "gamesInWindow": 11,
@@ -129,7 +129,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Fencing",
-          "readAt": "2026-11-25T09:47:40-05:00",
+          "readAt": "2026-11-25T18:26:35-05:00",
           "rows": 11,
           "games": 11,
           "gamesInWindow": 11,
@@ -153,7 +153,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Golf",
-          "readAt": "2026-11-25T09:47:40-05:00",
+          "readAt": "2026-11-25T18:26:35-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -177,7 +177,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Soccer",
-          "readAt": "2026-11-25T09:47:40-05:00",
+          "readAt": "2026-11-25T18:26:35-05:00",
           "rows": 16,
           "games": 16,
           "gamesInWindow": 15,
@@ -201,7 +201,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Soccer",
-          "readAt": "2026-11-25T09:47:40-05:00",
+          "readAt": "2026-11-25T18:26:35-05:00",
           "rows": 18,
           "games": 18,
           "gamesInWindow": 17,
@@ -213,7 +213,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Swimming",
-          "readAt": "2026-11-25T09:47:40-05:00",
+          "readAt": "2026-11-25T18:26:35-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -225,7 +225,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Swimming",
-          "readAt": "2026-11-25T09:47:40-05:00",
+          "readAt": "2026-11-25T18:26:35-05:00",
           "rows": 14,
           "games": 14,
           "gamesInWindow": 14,
@@ -237,7 +237,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Tennis",
-          "readAt": "2026-11-25T09:47:40-05:00",
+          "readAt": "2026-11-25T18:26:35-05:00",
           "rows": 16,
           "games": 16,
           "gamesInWindow": 16,
@@ -261,7 +261,7 @@
           "type": "girls JV",
           "division": "Bronx Science",
           "sport": "Volleyball",
-          "readAt": "2026-11-25T09:47:40-05:00",
+          "readAt": "2026-11-25T18:26:35-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -273,7 +273,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Volleyball",
-          "readAt": "2026-11-25T09:47:40-05:00",
+          "readAt": "2026-11-25T18:26:35-05:00",
           "rows": 16,
           "games": 16,
           "gamesInWindow": 16,
@@ -297,7 +297,7 @@
           "type": "girls JV",
           "division": "Bronx Science",
           "sport": "Basketball",
-          "readAt": "2026-11-25T09:47:40-05:00",
+          "readAt": "2026-11-25T18:26:35-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -309,7 +309,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Basketball",
-          "readAt": "2026-11-25T09:47:40-05:00",
+          "readAt": "2026-11-25T18:26:35-05:00",
           "rows": 19,
           "games": 19,
           "gamesInWindow": 18,
@@ -321,10 +321,10 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Basketball",
-          "readAt": "2026-11-25T09:47:40-05:00",
-          "rows": 19,
-          "games": 19,
-          "gamesInWindow": 17,
+          "readAt": "2026-11-25T18:26:35-05:00",
+          "rows": 20,
+          "games": 20,
+          "gamesInWindow": 18,
           "outOfRange": 0
         },
         "002": {
@@ -333,7 +333,7 @@
           "type": "boys JV",
           "division": "Bronx Science",
           "sport": "Basketball",
-          "readAt": "2026-11-25T09:47:40-05:00",
+          "readAt": "2026-11-25T18:26:35-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 9,
@@ -345,7 +345,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Gymnastics",
-          "readAt": "2026-11-25T09:47:40-05:00",
+          "readAt": "2026-11-25T18:26:35-05:00",
           "rows": 12,
           "games": 12,
           "gamesInWindow": 10,
@@ -369,7 +369,7 @@
           "type": "boys",
           "division": "Bronx Science",
           "outOfRange": 0,
-          "readAt": "2026-11-25T09:47:40-05:00",
+          "readAt": "2026-11-25T18:26:35-05:00",
           "rows": 9,
           "games": 9,
           "gamesInWindow": 6,
@@ -381,7 +381,7 @@
           "type": "girls v",
           "division": "Bronx Science",
           "sport": "Table Tennis",
-          "readAt": "2026-11-25T09:47:40-05:00",
+          "readAt": "2026-11-25T18:26:35-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -393,7 +393,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Table Tennis",
-          "readAt": "2026-11-25T09:47:40-05:00",
+          "readAt": "2026-11-25T18:26:35-05:00",
           "rows": 10,
           "games": 10,
           "gamesInWindow": 10,
@@ -405,7 +405,7 @@
           "type": "boys v",
           "division": "Bronx Science",
           "sport": "Wrestling",
-          "readAt": "2026-11-25T09:47:40-05:00",
+          "readAt": "2026-11-25T18:26:35-05:00",
           "rows": 8,
           "games": 8,
           "gamesInWindow": 8,
@@ -418,7 +418,7 @@
           "division": "Bronx Science",
           "sport": "Wrestling",
           "outOfRange": 0,
-          "readAt": "2026-11-22T12:16:13-05:00",
+          "readAt": "2026-11-25T18:26:35-05:00",
           "rows": 0,
           "games": 0,
           "gamesInWindow": 0
@@ -569,9 +569,9 @@
         }
       },
       "changes": {
-        "added": 0,
-        "updated": 5,
-        "rescheduled": 2,
+        "added": 1,
+        "updated": 0,
+        "rescheduled": 0,
         "markedCanceled": 0,
         "kept": 0,
         "reidentified": 0
@@ -579,7 +579,7 @@
       "warnings": []
     },
     "dayNotes": {},
-    "dataHash": "18fc1b955be50ac8"
+    "dataHash": "3d1e6753fb1eecd5"
   },
   "games": [
     {
@@ -5890,7 +5890,7 @@
           "team"
         ]
       },
-      "missingRuns": 23
+      "missingRuns": 24
     },
     {
       "id": "psal-054-503546",
@@ -6089,6 +6089,32 @@
         "scoreSource": "team",
         "checkedAt": "2026-11-23T20:07:55-05:00",
         "checks": 1
+      }
+    },
+    {
+      "id": "psal-001-s20261128-forest-hills",
+      "date": "2026-11-28",
+      "time": "11:00",
+      "sport": "Basketball",
+      "gender": "Boys",
+      "level": "Varsity",
+      "opponent": "Forest Hills",
+      "event": null,
+      "round": null,
+      "homeAway": "away",
+      "location": "Rego Park High School",
+      "status": "scheduled",
+      "score": null,
+      "resultText": null,
+      "statusNote": null,
+      "psal": {
+        "sportCode": "001",
+        "gameId": null,
+        "url": "https://www.psal.org/profiles/team-profile.aspx#001/10501",
+        "teamCode": "001",
+        "sources": [
+          "team"
+        ]
       }
     },
     {
